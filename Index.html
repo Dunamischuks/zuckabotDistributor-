@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zuckabot Distributor v5</title>
+    <style>
+        :root {
+            --primary: #00ff00;
+            --secondary: #0a0a0a;
+            --card-bg: #111;
+            --text: #fff;
+            --input-bg: #222;
+            --danger: #ff4444;
+            --warning: #ffbb33;
+            --success: #00C851;
+            --task-btn: #3366cc;
+            --verify-btn: #00ff00;
+            --connect-btn: #ff9900;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--secondary);
+            color: var(--text);
+            text-align: center;
+            margin: 0;
+            padding: 1rem;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 {
+            margin: 0.5rem 0;
+            color: var(--primary);
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .connect-button {
+            background: var(--connect-btn);
+            color: #000;
+        }
+
+        .task-button {
+            background: var(--task-btn);
+            color: white;
+        }
+
+        .verify-button {
+            background: var(--verify-btn);
+            color: black;
+        }
+
+        .primary-btn {
+            background: var(--primary);
+            color: var(--secondary);
+        }
+
+        .secondary-btn {
+            background: var(--input-bg);
+            color: var(--text);
+        }
+
+        .danger-btn {
+            background: var(--danger);
+            color: white;
+        }
+
+        input {
+            padding: 8px 12px;
+            margin-left: 5px;
+            width: 200px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background: var(--input-bg);
+            color: var(--text);
+        }
+
+        .task {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .task-status {
+            min-width: 150px;
+            text-align: left;
+        }
+
+        .checkmark {
+            display: none;
+            color: var(--success);
+            font-size: 20px;
+            animation: popin 0.3s ease forwards;
+        }
+
+        @keyframes popin {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        .progress-container {
+            width: 100%;
+            background: var(--input-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+            height: 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background: var(--primary);
+            transition: width 0.5s;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem auto;
+            max-width: 600px;
+            text-align: left;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: var(--danger);
+            color: white;
+        }
+
+        .status-verified {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-submitted {
+            background: var(--warning);
+            color: black;
+        }
+
+        .copy-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            margin-left: 8px;
+            background: var(--input-bg);
+            color: var(--text);
+        }
+
+        .address {
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            color: white;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.success {
+            background: var(--success);
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: var(--danger);
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        @media (max-width: 600px) {
+            .task {
+                flex-direction: column;
+            }
+            
+            input {
+                width: 90%;
+                margin: 10px 0;
+            }
+            
+            button {
+                width: 100%;
+                margin: 5px 0;
+            }
+            
+            .card {
+                padding: 1rem;
+                margin: 1rem auto;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .donation-tier {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .donation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .donation-option {
+            background: #222;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .donation-option:hover {
+            background: #333;
+            transform: scale(1.05);
+        }
+
+        .donation-option.selected {
+            background: var(--primary);
+            color: black;
+            font-weight: bold;
+        }
+
+        .price-ticker {
+            background: #1a1a1a;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .contract-status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: #1a1a1a;
+        }
+
+        .contract-status.connected {
+            background: var(--success);
+            color: black;
+        }
+
+        .contract-status.error {
+            background: var(--danger);
+        }
+    </style>
+</head>
+<body>
+
+<div id="notification" class="notification"></div>
+
+<h1>Zuckabot</h1>
+<h3>LIMITED TIME: 150M ZUCKA Pre-Launch Giveaway</h3>
+<p>Projected PancakeSwap Launch Price: $0.05 per ZUCKA</p>
+
+<div class="card">
+    <h3>Connect Wallet</h3>
+    <button id="connectWalletBtn" class="connect-button" onclick="connectWallet()">Connect Wallet</button>
+    <p id="walletInfo" style="display: none; word-break: break-all; margin-top: 10px;"></p>
+    <div id="contractStatus" class="contract-status">Contracts: Not Connected</div>
+    <p>💡 Tip: Best experience in Trust Wallet / MetaMask app browser.</p>
+</div>
+
+<button class="primary-btn" onclick="addTokenToWallet()">Add ZUCKA to Wallet</button>
+
+<div class="card">
+    <h3>✅ Complete Social Tasks</h3>
+    <p>Help Zuckabot go viral: join, follow, share, then paste proof links.</p>
+
+    <div class="task">
+        <span class="task-status">Telegram <span class="status-badge status-pending" id="telegramStatus">Pending</span></span>
+        <button class="task-button" onclick="openLink('https://t.me/zuckabotofficial/1')">Join Telegram</button>
+        <input id="telegramProof" placeholder="Paste proof link">
+        <button class="verify-button" onclick="verifyTask('telegram')">Verify</button>
+        <span class="checkmark" id="checkTelegram">✅</span>
+    </div>
+
+    <div class="task">
+        <span class="task-status">X (Twitter) <span class="status-badge status-pending" id="xStatus">Pending</span></span>
+        <button class="task-button" onclick="openLink('https://x.com/zuckabottoken')">Follow on X</button>
+        <input id="xProof" placeholder="Paste proof link">
+        <button class="verify-button" onclick="verifyTask('x')">Verify</button>
+        <span class="checkmark" id="checkX">✅</span>
+    </div>
+
+    <div class="task">
+        <span class="task-status">Facebook <span class="status-badge status-pending" id="facebookStatus">Pending</span></span>
+        <button class="task-button" onclick="openLink('https://web.facebook.com/profile.php?id=61579580776149')">Like Facebook</button>
+        <input id="facebookProof" placeholder="Paste proof link">
+        <button class="verify-button" onclick="verifyTask('facebook')">Verify</button>
+        <span class="checkmark" id="checkFB">✅</span>
+    </div>
+
+    <p>Status updates: 🔴 Pending → 🟡 Submitted → 🟢 Verified (auto after 10 min). No data uploaded; stored locally only.</p>
+</div>
+
+<div class="card">
+    <h3>Claim Your ZUCKA</h3>
+    <p>2-step: initiate claim, then finalize after verification (~10 minutes). Small on-chain fee (~$0.25 BNB).</p>
+    <p>Claim Fee: <span id="claimFeeBNB">Loading...</span> BNB</p>
+    <button id="claimBtn" class="primary-btn" disabled onclick="initiateClaim()">Initiate Claim</button>
+    <button id="finalizeBtn" class="secondary-btn" disabled onclick="finalizeClaim()">Finalize</button>
+    <p id="claimStatus">Status: Not started</p>
+    <p id="claimTimer">Time remaining: --:--</p>
+    <p>Your claim amount: <strong>1,500 ZUCKA</strong> ≈ $75 at launch price</p>
+</div>
+
+<div class="card">
+    <h3>Donation Calculator</h3>
+    <div class="price-ticker">
+        <span>Current BNB Price: $</span>
+        <span id="bnbPrice">Loading...</span>
+        <span id="priceSource"></span>
+    </div>
+    
+    <div class="donation-grid">
+        <div class="donation-option" data-amount="1">$1</div>
+        <div class="donation-option" data-amount="2">$2</div>
+        <div class="donation-option" data-amount="5">$5</div>
+        <div class="donation-option" data-amount="10">$10</div>
+        <div class="donation-option" data-amount="20">$20</div>
+        <div class="donation-option" data-amount="30">$30</div>
+        <div class="donation-option" data-amount="50">$50</div>
+        <div class="donation-option" data-amount="100">$100</div>
+    </div>
+    
+    <p>Or enter custom amount:</p>
+    <input type="number" id="donationUSD" placeholder="$ USD" oninput="updateDonation()">
+    
+    <div class="donation-tier">
+        <p>Donate: <span id="donationBNB">0</span> BNB</p>
+        <p>Receive: <span id="donationZUCKA">0</span> ZUCKA</p>
+        <p>Bonus: <span id="donationBonus">0</span> ZUCKA (<span id="bonusPercent">0%</span>)</p>
+        <p>Total: <span id="donationTotal">0</span> ZUCKA</p>
+    </div>
+    
+    <button class="primary-btn" onclick="processDonation()">Donate Now</button>
+</div>
+
+<div class="card">
+    <p>Claimed ZUCKA: <span id="claimedAmount">0</span> / 150,000,000</p>
+    <p>Unique Claim Wallets: <span id="uniqueWallets">0</span></p>
+    <p>Total Donations (BNB): <span id="totalDonations">0</span> BNB</p>
+    <div id="countdown">Loading countdown...</div>
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>About Zuckabot</h3>
+    <p>Zuckabot is a community-first token. Vision: democratize memecoin participation with a transparent treasury and distributor.</p>
+
+    <h3>FAQ</h3>
+    <details>
+        <summary>How to claim?</summary>
+        <p>Submit social links → Connect wallet → Initiate → Wait ~10 minutes → Finalize (~$0.25 BNB).</p>
+    </details>
+    <details>
+        <summary>Why is there a fee?</summary>
+        <p>Covers gas + LP seed. Fixed on-chain. The fee also helps prevent bots and fraudulent claims, ensuring fair distribution to real community members.</p>
+    </details>
+    <details>
+        <summary>When does trading begin?</summary>
+        <p>After giveaway completion and LP injection. Estimated initial price: $0.05/ZUCKA.</p>
+    </details>
+    <details>
+        <summary>How to add token to wallet?</summary>
+        <p>Use "Add ZUCKA" button above.</p>
+    </details>
+</div>
+
+<div class="card">
+    <h3>Contract Addresses</h3>
+    <div class="address">
+        <span>Token: 0x54bff3901d7d27ffe21b9a23bc8efb48c9847048</span>
+        <button class="copy-btn" onclick="copyToClipboard('0x54bff3901d7d27ffe21b9a23bc8efb48c9847048')">Copy</button>
+    </div>
+    <div class="address">
+        <span>Distributor: 0xec222Dba73C17877773E411D15904bf205FbA149</span>
+        <button class="copy-btn" onclick="copyToClipboard('0xec222Dba73C17877773E411D15904bf205FbA149')">Copy</button>
+    </div>
+    <div class="address">
+        <span>Treasury: 0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91</span>
+        <button class="copy-btn" onclick="copyToClipboard('0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91')">Copy</button>
+    </div>
+    
+    <p>Tip: Use your wallet's in-app browser (Trust Wallet / MetaMask) for easiest connection on mobile.</p>
+    <p>
+        <button class="secondary-btn" onclick="openLink('https://t.me/zuckabotofficial/1')">Join Telegram</button>
+        <button class="secondary-btn" onclick="openLink('https://x.com/zuckabottoken')">Follow on X</button>
+        <button class="secondary-btn" onclick="openLink('https://web.facebook.com/profile.php?id=61579580776149')">Like on Facebook</button>
+    </p>
+</div>
+
+<footer class="card">
+    <p>©2025 Zuckabot • Token: 0x54bff3901d7d27ffe21b9a23bc8efb48c9847048 • Distributor: 0xec222Dba73C17877773E411D15904bf205FbA149 • Treasury: 0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+<script>
+    // Zuckabot Distributor v5 - Complete Production Implementation
+    let walletConnected = false;
+    let web3;
+    let userAddress = '';
+    let claimInitiated = false;
+    let claimTimer = null;
+    let tasksVerified = {
+        telegram: {verified: false, timestamp: 0}, 
+        x: {verified: false, timestamp: 0}, 
+        facebook: {verified: false, timestamp: 0}
+    };
+    let bnbPrice = 0;
+    let selectedDonationAmount = 0;
+    let distributorContract, tokenContract;
+    let claimFeeWei = 0;
+
+    // Contract addresses
+    const ZUCKABOT_TOKEN_ADDRESS = '0x54bff3901d7d27ffe21b9a23bc8efb48c9847048';
+    const ZUCKABOT_DISTRIBUTOR_ADDRESS = '0xec222Dba73C17877773E411D15904bf205FbA149';
+    const ZUCKABOT_TREASURY_ADDRESS = '0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91';
+
+    // Contract ABIs
+    const ZUCKABOT_TOKEN_ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}];
+
+    const ZUCKABOT_DISTRIBUTOR_ABI = [{"inputs":[{"internalType":"address","name":"_zuckaToken","type":"address"},{"internalType":"address","name":"_priceFeed","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"zuckaAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"bnbPaid","type":"uint256"}],"name":"ClaimFinalized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ClaimInitiated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"bnbAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"zuckaAmount","type":"uint256"}],"name":"Donated","type":"event"},{"inputs":[],"name":"BASE_RATE_PER_USD18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"CLAIM_AMOUNT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"CLAIM_FEE_USD18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TREASURY","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"donate","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"finalizeClaim","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"getLatestBNBPrice18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotals","outputs":[{"internalType":"uint256","name":"tokensDistributed","type":"uint256"},{"internalType":"uint256","name":"bnbCollectedWei","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"hasClaimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"initiateClaim","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"pendingClaimTimestamp","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"priceFeed","outputs":[{"internalType":"contract AggregatorV3Interface","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"requiredClaimWei","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"secondsUntilFinalize","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalClaimedTokens","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalDonatedBNB","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"usd18","type":"uint256"}],"name":"usd18ToWei","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"weiAmount","type":"uint256"}],"name":"weiToUsd18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"zucka","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}];
+
+    // Initialize from localStorage
+    function initializeApp() {
+        // Load saved data if exists
+        const savedData = localStorage.getItem('zuckabotData');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            
+            // Restore task status
+            if (data.tasks) {
+                for (const task in data.tasks) {
+                    if (data.tasks[task].verified) {
+                        tasksVerified[task] = data.tasks[task];
+                        document.getElementById(`${task}Proof`).value = 'Previously verified';
+                        document.getElementById(`check${task.charAt(0).toUpperCase() + task.slice(1)}`).style.display = 'inline';
+                        updateTaskStatus(task, 'verified');
+                    }
+                }
+            }
+            
+            // Restore claim status
+            if (data.claimInitiated) {
+                claimInitiated = true;
+                document.getElementById('claimBtn').disabled = true;
+                document.getElementById('finalizeBtn').disabled = false;
+                document.getElementById('claimStatus').textContent = 'Status: Waiting for verification (10 min)';
+                
+                // If we have a timestamp, calculate remaining time
+                if (data.claimTimestamp) {
+                    const elapsed = Date.now() - data.claimTimestamp;
+                    const remaining = Math.max(0, 600000 - elapsed); // 10 minutes in ms
+                    
+                    if (remaining > 0) {
+                        // Set timer to enable finalize button
+                        claimTimer = setTimeout(() => {
+                            document.getElementById('claimStatus').textContent = 'Status: Ready to finalize';
+                            showNotification('Your claim is now ready to finalize!', 'success');
+                        }, remaining);
+                    } else {
+                        document.getElementById('claimStatus').textContent = 'Status: Ready to finalize';
+                    }
+                }
+            }
+            
+            // Update stats
+            if (data.claimed) {
+                claimed = data.claimed;
+                updateStats();
+            }
+        }
+        
+        // Set up donation option click handlers
+        document.querySelectorAll('.donation-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.donation-option').forEach(el => el.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedDonationAmount = parseInt(this.getAttribute('data-amount'));
+                document.getElementById('donationUSD').value = selectedDonationAmount;
+                updateDonation();
+            });
+        });
+        
+        // Fetch current BNB price from multiple sources
+        fetchBNBPrice();
+        
+        updateClaimButton();
+        updateCountdown();
+    }
+
+    // Initialize contracts after wallet connection
+    async function initializeContracts() {
+        try {
+            // Initialize token contract
+            tokenContract = new web3.eth.Contract(ZUCKABOT_TOKEN_ABI, ZUCKABOT_TOKEN_ADDRESS);
+            
+            // Initialize distributor contract
+            distributorContract = new web3.eth.Contract(ZUCKABOT_DISTRIBUTOR_ABI, ZUCKABOT_DISTRIBUTOR_ADDRESS);
+            
+            // Update contract status
+            document.getElementById('contractStatus').textContent = 'Contracts: Connected';
+            document.getElementById('contractStatus').className = 'contract-status connected';
+            
+            // Load contract data
+            await loadContractData();
+            
+            showNotification('Smart contracts connected successfully!');
+        } catch (error) {
+            console.error('Failed to initialize contracts:', error);
+            document.getElementById('contractStatus').textContent = 'Contracts: Error Connecting';
+            document.getElementById('contractStatus').className = 'contract-status error';
+            showNotification('Failed to connect to smart contracts', 'error');
+        }
+    }
+
+    // Load data from contracts
+    async function loadContractData() {
+        try {
+            // Get claim fee in BNB
+            claimFeeWei = await distributorContract.methods.requiredClaimWei().call();
+            const claimFeeBNB = web3.utils.fromWei(claimFeeWei, 'ether');
+            document.getElementById('claimFeeBNB').textContent = claimFeeBNB;
+            
+            // Get totals from contract
+            const totals = await distributorContract.methods.getTotals().call();
+            claimed = totals.tokensDistributed / 1e18; // Convert from wei
+            totalDonations = totals.bnbCollectedWei / 1e18; // Convert from wei
+            
+            // Get unique wallets (approximate)
+            uniqueWallets = Math.floor(claimed / 1500);
+            
+            updateStats();
+            
+            // Check if user has already claimed
+            if (userAddress) {
+                const hasClaimed = await distributorContract.methods.hasClaimed(userAddress).call();
+                if (hasClaimed) {
+                    document.getElementById('claimBtn').disabled = true;
+                    document.getElementById('finalizeBtn').disabled = true;
+                    document.getElementById('claimStatus').textContent = 'Status: Already Claimed';
+                } else {
+                    // Check if user has a pending claim
+                    const pendingTimestamp = await distributorContract.methods.pendingClaimTimestamp(userAddress).call();
+                    if (pendingTimestamp > 0) {
+                        claimInitiated = true;
+                        document.getElementById('claimBtn').disabled = true;
+                        document.getElementById('finalizeBtn').disabled = false;
+                        document.getElementById('claimStatus').textContent = 'Status: Waiting for verification';
+                        
+                        // Start countdown
+                        startClaimCountdown(pendingTimestamp);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load contract data:', error);
+        }
+    }
+
+    // Start countdown for claim finalization
+    function startClaimCountdown(pendingTimestamp) {
+        const checkCountdown = () => {
+            const now = Math.floor(Date.now() / 1000);
+            const elapsed = now - pendingTimestamp;
+            const remaining = Math.max(0, 600 - elapsed); // 10 minutes in seconds
+            
+            if (remaining > 0) {
+                const minutes = Math.floor(remaining / 60);
+                const seconds = remaining % 60;
+                document.getElementById('claimTimer').textContent = `Time remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                document.getElementById('claimTimer').textContent = 'Ready to finalize!';
+                document.getElementById('finalizeBtn').disabled = false;
+                clearInterval(countdownInterval);
+            }
+        };
+        
+        // Check immediately and then every second
+        checkCountdown();
+        const countdownInterval = setInterval(checkCountdown, 1000);
+    }
+
+    // Fetch current BNB price from multiple sources with fallbacks
+    async function fetchBNBPrice() {
+        const sources = [
+            {
+                name: 'Chainlink',
+                url: 'https://min-api.cryptocompare.com/data/price?fsym=BNB&tsyms=USD',
+                parser: data => data.USD
+            },
+            {
+                name: 'Binance',
+                url: 'https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT',
+                parser: data => parseFloat(data.price)
+            },
+            {
+                name: 'CoinGecko',
+                url: 'https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd',
+                parser: data => data.binancecoin.usd
+            }
+        ];
+        
+        // Try each source until we get a price
+        for (const source of sources) {
+            try {
+                const response = await fetch(source.url);
+                if (!response.ok) continue;
+                
+                const data = await response.json();
+                bnbPrice = source.parser(data);
+                
+                if (bnbPrice && bnbPrice > 0) {
+                    document.getElementById('bnbPrice').textContent = bnbPrice.toFixed(2);
+                    document.getElementById('priceSource').textContent = `via ${source.name}`;
+                    updateDonation();
+                    return;
+                }
+            } catch (error) {
+                console.error(`Failed to fetch BNB price from ${source.name}:`, error);
+                continue;
+            }
+        }
+        
+        // Fallback if all sources fail
+        bnbPrice = 840; // Current approximate price as fallback
+        document.getElementById('bnbPrice').textContent = '840.00 (estimated)';
+        document.getElementById('priceSource').textContent = 'estimated';
+        updateDonation();
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        
+        setTimeout(() => {
+            notification.className = 'notification';
+        }, 3000);
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showNotification('Copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            // Fallback for older browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+            showNotification('Copied to clipboard!');
+        });
+    }
+
+    // Open external links
+    function openLink(url) {
+        window.open(url, '_blank');
+    }
+
+    // WalletConnect / MetaMask integration
+    async function connectWallet(){
+        if (window.ethereum) {
+            try {
+                const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+                web3 = new Web3(window.ethereum);
+                userAddress = accounts[0];
+                walletConnected = true;
+                
+                // Display truncated wallet address
+                const truncatedAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+                document.getElementById('walletInfo').textContent = `Connected: ${truncatedAddress}`;
+                document.getElementById('walletInfo').style.display = 'block';
+                
+                showNotification("Wallet connected successfully!");
+                
+                // Initialize contracts
+                await initializeContracts();
+                
+                updateClaimButton();
+                
+                // Listen for account changes
+                window.ethereum.on('accountsChanged', async (accounts) => {
+                    if (accounts.length === 0) {
+                        // User disconnected their wallet
+                        walletConnected = false;
+                        userAddress = '';
+                        document.getElementById('walletInfo').style.display = 'none';
+                        showNotification('Wallet disconnected', 'error');
+                    } else {
+                        // User switched accounts
+                        userAddress = accounts[0];
+                        const truncatedAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+                        document.getElementById('walletInfo').textContent = `Connected: ${truncatedAddress}`;
+                        showNotification('Wallet account changed');
+                        
+                        // Reload contract data for new account
+                        await loadContractData();
+                    }
+                    updateClaimButton();
+                });
+            } catch (err) { 
+                console.error(err); 
+                showNotification("Connection failed. Please try again.", 'error');
+            }
+        } else {
+            showNotification("Please install MetaMask or Trust Wallet to connect.", 'error');
+        }
+    }
+
+    // Add token to wallet
+    async function addTokenToWallet() {
+        if (!window.ethereum) {
+            showNotification("Please use a Web3 wallet like MetaMask or Trust Wallet", 'error');
+            return;
+        }
+        
+        try {
+            const wasAdded = await window.ethereum.request({
+                method: 'wallet_watchAsset',
+                params: {
+                    type: 'ERC20',
+                    options: {
+                        address: ZUCKABOT_TOKEN_ADDRESS,
+                        symbol: 'ZUCKA',
+                        decimals: 18,
+                        image: 'https://zuckabot.com/icon.png',
+                    },
+                },
+            });
+            
+            if (wasAdded) {
+                showNotification('ZUCKA token added to your wallet!');
+            } else {
+                showNotification('Token was not added.', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showNotification('Failed to add token.', 'error');
+        }
+    }
+
+    // Task verification
+    function verifyTask(task){
+        const input = document.getElementById(task + 'Proof');
+        const proofLink = input.value.trim();
+        
+        if (!proofLink) {
+            showNotification("Please paste a proof link first!", 'error');
+            return;
+        }
+        
+        // Simple validation for URL format
+        try {
+            new URL(proofLink);
+        } catch (e) {
+            showNotification("Please enter a valid URL", 'error');
+            return;
+        }
+        
+        // Update task status
+        tasksVerified[task] = {
+            verified: true,
+            timestamp: Date.now()
+        };
+        
+        document.getElementById('check' + task.charAt(0).toUpperCase() + task.slice(1)).style.display = 'inline';
+        updateTaskStatus(task, 'submitted');
+        
+        showNotification(`Task submitted! It will be verified shortly.`);
+        
+        // Simulate verification delay (10 minutes)
+        setTimeout(() => {
+            updateTaskStatus(task, 'verified');
+            showNotification(`${task} task verified successfully!`, 'success');
+            updateClaimButton();
+            saveToLocalStorage();
+        }, 600000); // 10 minutes
+        
+        updateClaimButton();
+        saveToLocalStorage();
+    }
+
+    function updateTaskStatus(task, status) {
+        const statusElement = document.getElementById(`${task}Status`);
+        statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusElement.className = `status-badge status-${status}`;
+        
+        // Update status indicator
+        const statusIndicator = status === 'pending' ? '🔴' : 
+                            status === 'submitted' ? '🟡' : '🟢';
+        document.querySelector(`.task-status:has(#${task}Status)`).innerHTML = 
+            document.querySelector(`.task-status:has(#${task}Status)`).innerHTML.replace(/🔴|🟡|🟢/, statusIndicator);
+    }
+
+    function allTasksVerified() {
+        return Object.values(tasksVerified).every(task => task.verified);
+    }
+
+    function updateClaimButton() {
+        document.getElementById('claimBtn').disabled = !(allTasksVerified() && walletConnected && !claimInitiated);
+    }
+
+    // Claim flow
+    let claimed = 0;
+    let uniqueWallets = 0;
+    let totalDonations = 0;
+
+    async function initiateClaim() {
+        if (!walletConnected) {
+            showNotification("Please connect your wallet first", 'error');
+            return;
+        }
+        
+        if (!allTasksVerified()) {
+            showNotification("Please complete all tasks first", 'error');
+            return;
+        }
+        
+        try {
+            // Call the smart contract to initiate claim
+            await distributorContract.methods.initiateClaim().send({ from: userAddress });
+            
+            claimInitiated = true;
+            document.getElementById('claimBtn').disabled = true;
+            document.getElementById('finalizeBtn').disabled = true;
+            document.getElementById('claimStatus').textContent = 'Status: Verifying (10 min required)';
+            
+            showNotification("Claim initiated on blockchain! Please wait 10 minutes before finalizing.");
+            
+            // Get the timestamp from the contract
+            const pendingTimestamp = await distributorContract.methods.pendingClaimTimestamp(userAddress).call();
+            startClaimCountdown(pendingTimestamp);
+            
+            saveToLocalStorage();
+        } catch (error) {
+            console.error('Failed to initiate claim:', error);
+            showNotification('Failed to initiate claim. Please try again.', 'error');
+        }
+    }
+
+    async function finalizeClaim() {
+        try {
+            // Calculate required BNB for claim fee
+            const requiredWei = await distributorContract.methods.requiredClaimWei().call();
+            
+            // Call the smart contract to finalize claim
+            await distributorContract.methods.finalizeClaim().send({ 
+                from: userAddress, 
+                value: requiredWei 
+            });
+            
+            document.getElementById('claimStatus').textContent = 'Status: Claim completed!';
+            showNotification("Claim finalized! 1500 ZUCKA sent to your wallet.", 'success');
+            
+            // Update stats
+            claimed += 1500;
+            uniqueWallets += 1;
+            totalDonations += requiredWei / 1e18;
+            updateStats();
+            
+            saveToLocalStorage();
+        } catch (error) {
+            console.error('Failed to finalize claim:', error);
+            showNotification('Failed to finalize claim. Please try again.', 'error');
+        }
+    }
+
+    // Donation calculator with bonus system
+    function updateDonation() {
+        const usdInput = document.getElementById('donationUSD');
+        let usd = parseFloat(usdInput.value) || 0;
+        
+        // Update selected amount if it matches a preset option
+        document.querySelectorAll('.donation-option').forEach(option => {
+            const optionAmount = parseInt(option.getAttribute('data-amount'));
+            option.classList.toggle('selected', optionAmount === usd);
+        });
+        
+        if (bnbPrice > 0) {
+            const bnbAmount = usd / bnbPrice;
+            document.getElementById('donationBNB').textContent = bnbAmount.toFixed(6);
+            
+            // Calculate ZUCKA amount (base rate: $1 = 2000 ZUCKA)
+            const baseZucka = usd * 2000;
+            
+            // Calculate bonus based on donation amount
+            let bonusPercent = 0;
+            if (usd >= 10 && usd < 20) bonusPercent = 10;
+            else if (usd >= 20 && usd < 30) bonusPercent = 20;
+            else if (usd >= 30 && usd < 50) bonusPercent = 30;
+            else if (usd >= 50) bonusPercent = 50;
+            
+            const bonusZucka = Math.floor(baseZucka * (bonusPercent / 100));
+            const totalZucka = baseZucka + bonusZucka;
+            
+            document.getElementById('donationZUCKA').textContent = baseZucka.toLocaleString();
+            document.getElementById('donationBonus').textContent = bonusZucka.toLocaleString();
+            document.getElementById('bonusPercent').textContent = `${bonusPercent}%`;
+            document.getElementById('donationTotal').textContent = totalZucka.toLocaleString();
+        } else {
+            document.getElementById('donationBNB').textContent = '0';
+            document.getElementById('donationZUCKA').textContent = '0';
+            document.getElementById('donationBonus').textContent = '0';
+            document.getElementById('bonusPercent').textContent = '0%';
+            document.getElementById('donationTotal').textContent = '0';
+        }
+    }
+
+    async function processDonation() {
+        const usdInput = document.getElementById('donationUSD');
+        const usd = parseFloat(usdInput.value) || 0;
+        
+        if (usd <= 0) {
+            showNotification("Please enter a donation amount first", 'error');
+            return;
+        }
+        
+        if (!walletConnected) {
+            showNotification("Please connect your wallet first", 'error');
+            return;
+        }
+        
+        try {
+            // Calculate required BNB amount
+            const bnbAmount = usd / bnbPrice;
+            const weiAmount = web3.utils.toWei(bnbAmount.toString(), 'ether');
+            
+            // Call the smart contract donate function
+            await distributorContract.methods.donate().send({ 
+                from: userAddress, 
+                value: weiAmount 
+            });
+            
+            // Calculate ZUCKA amount with bonus
+            const baseZucka = usd * 2000;
+            let bonusPercent = 0;
+            if (usd >= 10 && usd < 20) bonusPercent = 10;
+            else if (usd >= 20 && usd < 30) bonusPercent = 20;
+            else if (usd >= 30 && usd < 50) bonusPercent = 30;
+            else if (usd >= 50) bonusPercent = 50;
+            
+            const bonusZucka = Math.floor(baseZucka * (bonusPercent / 100));
+            const totalZucka = baseZucka + bonusZucka;
+            
+            showNotification(`Thank you for your donation of $${usd}! You received ${totalZucka.toLocaleString()} ZUCKA.`, 'success');
+            
+            // Update stats
+            totalDonations += bnbAmount;
+            claimed += totalZucka;
+            updateStats();
+            
+            // Reset donation form
+            usdInput.value = '';
+            document.querySelectorAll('.donation-option').forEach(el => el.classList.remove('selected'));
+            updateDonation();
+            saveToLocalStorage();
+        } catch (error) {
+            console.error('Failed to process donation:', error);
+            showNotification('Failed to process donation. Please try again.', 'error');
+        }
+    }
+
+    // Stats & countdown
+    function updateStats() {
+        document.getElementById('claimedAmount').innerText = claimed.toLocaleString();
+        document.getElementById('uniqueWallets').innerText = uniqueWallets.toLocaleString();
+        document.getElementById('totalDonations').innerText = totalDonations.toFixed(4);
+        
+        let percent = (claimed / 150000000) * 100;
+        document.getElementById('progressBar').style.width = percent + '%';
+    }
+
+    const endDate = new Date("2025-09-30T23:59:59").getTime();
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const dist = endDate - now;
+        
+        if (dist < 0) {
+            document.getElementById('countdown').innerText = 'Event Ended';
+            // Disable all actions if event has ended
+            document.getElementById('claimBtn').disabled = true;
+            document.getElementById('finalizeBtn').disabled = true;
+            return;
+        }
+        
+        let days = Math.floor(dist / (1000 * 60 * 60 * 24));
+        let hours = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        let minutes = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+        let seconds = Math.floor((dist % (1000 * 60)) / 1000);
+        
+        document.getElementById('countdown').innerHTML = `
+            <strong>Ends in:</strong> ${days}d ${hours}h ${minutes}m ${seconds}s
+        `;
+    }
+
+    // Local storage functions
+    function saveToLocalStorage() {
+        const data = {
+            tasks: tasksVerified,
+            claimInitiated: claimInitiated,
+            claimTimestamp: claimInitiated ? Date.now() : null,
+            claimed: claimed,
+            uniqueWallets: uniqueWallets,
+            totalDonations: totalDonations
+        };
+        
+        localStorage.setItem('zuckabotData', JSON.stringify(data));
+    }
+
+    // Initialize the application
+    initializeApp();
+    setInterval(updateCountdown, 1000);
+    // Refresh BNB price every minute
+    setInterval(fetchBNBPrice, 60000);
+</script>
+</body>
+</html>
