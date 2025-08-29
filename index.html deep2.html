@@ -1,5 +1,4 @@
-<!-- Save this as index.html and serve it -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -7,147 +6,242 @@
 <title>Zuckabot — Claim Portal (Live)</title>
 <style>
   :root{
-    --primary:#00ff00; --bg:#0a0a0a; --card:#111; --text:#fff; --muted:#aaa; --accent:#ff9900; --danger:#ff4444; --success:#00C851;
+    --primary:#00ff00; --bg:#0a0a0a; --card:#111; --text:#fff; --muted:#9aa; --accent:#ff9900; 
+    --danger:#ff4444; --success:#00C851; --glass: rgba(255,255,255,0.03);
   }
-  body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:1rem;text-align:center;}
-  h1,h2,h3{color:var(--primary);margin:0.4rem 0;}
-  .card{background:var(--card);border-radius:8px;padding:1.25rem;margin:1rem auto;max-width:900px;box-shadow:0 6px 18px rgba(0,0,0,.5);text-align:left;}
-  button{padding:10px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:700;margin:6px;}
-  .connect{background:var(--accent);color:#000;}
-  .primary{background:var(--primary);color:#000;}
-  .secondary{background:#222;color:var(--text);}
+  body{font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:1rem;line-height:1.45;}
+  a{color:var(--primary)}
+  header{max-width:1100px;margin:0 auto 1rem;padding:0 1rem;}
+  h1{color:var(--primary);margin:6px 0;font-size:2.2rem;}
+  h2{margin:6px 0;color:#fff;font-size:1.25rem}
+  .card{background:linear-gradient(180deg,var(--card),rgba(0,0,0,0.35));border-radius:10px;padding:1.2rem;margin:1rem auto;max-width:1100px;box-shadow:0 10px 30px rgba(0,0,0,.7);text-align:left;border:1px solid rgba(255,255,255,0.02);}
+  .inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;}
+  .muted{color:var(--muted);font-size:0.95rem;}
+  button{padding:10px 14px;border-radius:9px;border:none;cursor:pointer;font-weight:700;margin:6px;}
+  .btn-accent{background:var(--accent);color:#000;}
+  .btn-primary{background:var(--primary);color:#000;}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,0.04);}
+  input, textarea{padding:9px;border-radius:8px;border:1px solid #222;background:#0b0b0b;color:var(--text);width:100%;}
   .small{font-size:0.9rem;color:var(--muted);}
-  .inline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
-  input{padding:8px;border-radius:6px;border:1px solid #333;background:#111;color:var(--text);}
-  .notification{position:fixed;right:20px;top:20px;padding:12px 14px;border-radius:8px;display:none;z-index:9999;}
-  .notification.success{background:var(--success);color:#000;}
-  .notification.error{background:var(--danger);color:#fff;}
-  .address{font-family:monospace;font-size:13px;word-break:break-all;}
-  a.link{color:var(--primary);text-decoration:none;}
-  footer{color:var(--muted);text-align:center;margin-top:1rem;}
-  @media(max-width:600px){ .inline{flex-direction:column;align-items:flex-start;} button{width:100%;} }
+  .address{font-family:monospace;font-size:13px;word-break:break-all;color:var(--muted)}
+  footer{color:var(--muted);text-align:center;margin-top:1rem;font-size:0.9rem;}
+  .flex-col{display:flex;flex-direction:column;gap:8px;}
+  .stat{background:var(--glass);padding:8px;border-radius:8px;}
+  .copy-btn{padding:6px 8px;border-radius:8px;background:#0f0f0f;border:1px solid rgba(255,255,255,0.03);cursor:pointer;color:var(--muted);}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999;}
+  .modal{background:#0a0a0a;border-radius:10px;padding:18px;min-width:320px;max-width:520px;border:1px solid rgba(255,255,255,0.03);}
+  .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#081;color:#000;font-weight:700;}
+  @media(max-width:820px){ .inline{flex-direction:column;align-items:flex-start;} button{width:100%;} }
 </style>
 </head>
 <body>
-<div id="notification" class="notification"></div>
 
-<h1>Zuckabot</h1>
-<h3>Claim Portal — Pre-Launch Giveaway</h3>
-<p class="small">2-step: <strong>Initiate</strong> → wait ~10 minutes → <strong>Finalize</strong> with small on-chain fee. The UI reads Chainlink via the contract so amounts match on-chain.</p>
+<header>
+  <h1>Zuckabot</h1>
+  <p class="muted">Claim Portal — 200,000,000 ZUCKA giveaway • simple, on-chain, verifiable.</p>
+</header>
 
-<!-- Connect -->
+<div id="notification" style="position:fixed;right:18px;top:18px;padding:12px 14px;border-radius:8px;display:none;z-index:9998;"></div>
+
+<!-- Top: connect + key actions -->
 <div class="card">
   <div class="inline">
-    <div>
-      <h3>Connect Wallet</h3>
+    <div style="flex:1">
+      <h2>Connect Wallet</h2>
       <p id="walletInfo" class="small">Not connected</p>
+      <p class="small">Use MetaMask or Trust Wallet in-app browser. Connect to BSC Mainnet.</p>
     </div>
-    <div>
-      <button id="connectButton" class="connect">Connect Wallet</button>
-      <button onclick="addToken()" class="secondary">Add ZUCKA to Wallet</button>
+    <div style="min-width:220px;text-align:right">
+      <button id="connectButton" class="btn-accent">Connect Wallet</button>
+      <button id="addTokenBtn" class="btn-ghost">Add ZUCKA</button>
     </div>
   </div>
-  <p class="small">Tip: Best experience in Trust Wallet / MetaMask app browser.</p>
 </div>
 
-<!-- Tasks (client-side) -->
+<!-- About / Marketing -->
 <div class="card">
-  <h3>Complete Social Tasks</h3>
-  <p class="small">Help Zuckabot go viral: join, follow, share, then paste proof links. Stored locally only.</p>
-
-  <div class="task inline">
-    <div>
-      Telegram <span id="telegramStatus" class="small" style="margin-left:8px;color:var(--muted)">Pending</span><br/>
-      <a class="link" href="https://t.me/zuckabotofficial/1" target="_blank">Join Telegram</a>
-    </div>
+  <div class="inline" style="align-items:flex-start">
     <div style="flex:1">
+      <h2>About Zuckabot — short and real</h2>
+      <p class="small">
+        Zuckabot is a community-first token built for virality and fairness. We're distributing a large launch pool (200,000,000 ZUCKA)
+        via a simple, verifiable two-step claim flow. No hidden admin controls — token ownership is renounced and the distributor contract
+        is open-source so anyone can audit claims and donations on-chain.
+      </p>
+
+      <h3 style="margin-top:12px">Why Zuckabot is different</h3>
+      <ul class="small">
+        <li><strong>Community-driven:</strong> a huge public giveaway to spread tokens widely and bootstrap organic adoption.</li>
+        <li><strong>Verifiable:</strong> all contracts are published and verifiable on BscScan — the distributor simply forwards fees to the treasury and pays out tokens on-chain.</li>
+        <li><strong>No surprise mechanics:</strong> standard ERC20 token, 1B fixed supply, ownership renounced — no minting magic.</li>
+        <li><strong>Low barrier launch:</strong> planned PancakeSwap listing at <strong>$0.05</strong> to make early participation attractive.</li>
+      </ul>
+    </div>
+
+    <aside style="min-width:260px">
+      <div class="stat">
+        <div class="small">Airdrop pool</div>
+        <div style="font-weight:800;font-size:1.1rem">200,000,000 ZUCKA</div>
+      </div>
+      <div class="stat" style="margin-top:8px">
+        <div class="small">Supply</div>
+        <div style="font-weight:800;font-size:1.1rem">1,000,000,000 ZUCKA</div>
+      </div>
+      <div class="stat" style="margin-top:8px">
+        <div class="small">Proposed Launch Price</div>
+        <div style="font-weight:800;font-size:1.1rem">$0.05 on PancakeSwap</div>
+      </div>
+    </aside>
+  </div>
+
+  <div style="margin-top:12px" class="small">
+    <strong>Short pitch:</strong> If a token can be both viral and verifiable — people keep it. Zuckabot aims to reward early supporters with an accessible launch price
+    and a large public distribution so the community shapes the narrative.
+  </div>
+</div>
+
+<!-- Tasks -->
+<div class="card">
+  <h2>Complete Social Tasks</h2>
+  <p class="small">Optional: help the project get noticed. Proofs are stored locally only — never sent to a server.</p>
+
+  <div class="inline" style="gap:10px">
+    <div style="flex:1">
+      <label class="small">Telegram — <a href="https://t.me/zuckabotofficial/1" target="_blank">join</a></label>
       <input id="telegramProof" placeholder="Paste proof link (Telegram)" />
-      <button onclick="verifyTask('telegram')" class="secondary">Verify</button>
-      <span id="checkTelegram" style="display:none">✅</span>
+    </div>
+    <div style="width:180px">
+      <button onclick="verifyTask('telegram')" class="btn-ghost">Verify</button>
+      <span id="checkTelegram" style="display:none;margin-left:8px">✅</span>
     </div>
   </div>
 
-  <div class="task inline" style="margin-top:8px">
-    <div>
-      X (Twitter) <span id="xStatus" class="small" style="margin-left:8px;color:var(--muted)">Pending</span><br/>
-      <a class="link" href="https://x.com/zuckabottoken" target="_blank">Follow on X</a>
-    </div>
+  <div class="inline" style="gap:10px;margin-top:8px">
     <div style="flex:1">
+      <label class="small">X (Twitter) — <a href="https://x.com/zuckabottoken" target="_blank">follow</a></label>
       <input id="xProof" placeholder="Paste proof link (X)" />
-      <button onclick="verifyTask('x')" class="secondary">Verify</button>
-      <span id="checkX" style="display:none">✅</span>
+    </div>
+    <div style="width:180px">
+      <button onclick="verifyTask('x')" class="btn-ghost">Verify</button>
+      <span id="checkX" style="display:none;margin-left:8px">✅</span>
     </div>
   </div>
 
-  <div class="task inline" style="margin-top:8px">
-    <div>
-      Facebook <span id="facebookStatus" class="small" style="margin-left:8px;color:var(--muted)">Pending</span><br/>
-      <a class="link" href="https://web.facebook.com/profile.php?id=61579580776149" target="_blank">Like on Facebook</a>
-    </div>
+  <div class="inline" style="gap:10px;margin-top:8px">
     <div style="flex:1">
+      <label class="small">Facebook — <a href="https://web.facebook.com/profile.php?id=61579580776149" target="_blank">like</a></label>
       <input id="facebookProof" placeholder="Paste proof link (Facebook)" />
-      <button onclick="verifyTask('facebook')" class="secondary">Verify</button>
-      <span id="checkFB" style="display:none">✅</span>
     </div>
-  </div>
-  <p class="small">Status: 🔴 Pending → 🟡 Submitted → 🟢 Verified (auto after 10 min).</p>
-</div>
-
-<!-- Claim card -->
-<div class="card">
-  <h3>Claim Your ZUCKA</h3>
-  <p class="small">2-step claim: initiate → wait ~10 minutes → finalize (sends required BNB to treasury).</p>
-
-  <div class="inline" style="margin-top:6px;">
-    <div>
-      <p>BNB Price (Chainlink): <strong id="bnbPrice">$--</strong></p>
-      <p>Claim Fee: <strong id="claimFee">-- BNB</strong></p>
-    </div>
-    <div>
-      <button id="initiateBtn" class="primary" disabled>Initiate Claim</button>
-      <button id="finalizeBtn" class="secondary" disabled>Finalize Claim</button>
+    <div style="width:180px">
+      <button onclick="verifyTask('facebook')" class="btn-ghost">Verify</button>
+      <span id="checkFB" style="display:none;margin-left:8px">✅</span>
     </div>
   </div>
 
-  <p id="claimStatus" class="small">Status: Not started</p>
-  <p id="claimTimer" class="small">Time remaining: --:--</p>
-  <p class="small">Your claim amount: <strong>1,500 ZUCKA</strong></p>
+  <p class="small" style="margin-top:10px">Status: 🔴 Pending → 🟡 Submitted → 🟢 Verified (auto after 10 minutes).</p>
 </div>
 
-<!-- Stats card -->
+<!-- Claim Card (fee hidden until finalize click) -->
 <div class="card">
-  <h3>On-chain Stats</h3>
-  <p class="small">Distributor token balance: <strong id="distTokenBalance">--</strong></p>
-  <p class="small">Total Claimed Tokens: <strong id="totalClaimed">--</strong></p>
-  <p class="small">Total Donations (BNB forwarded): <strong id="totalDonatedBNB">--</strong></p>
-  <p class="small">Distributor: <span class="address">0xec222Dba73C17877773E411D15904bf205FbA149</span>
-    &nbsp; <a id="distributorLink" class="link" href="#" target="_blank">View on BSCScan</a></p>
-  <p class="small">Token: <span class="address">0x54bff3901d7d27ffe21b9a23bc8efb48c9847048</span>
-    &nbsp; <a id="tokenLink" class="link" href="#" target="_blank">View on BSCScan</a></p>
+  <h2>Claim Your ZUCKA</h2>
+  <p class="small">Two-step on-chain claim: Initiate (tx) → wait 10 minutes → Finalize (pay small on-chain fee). All operations are visible on BscScan.</p>
+
+  <div class="inline">
+    <div style="flex:1">
+      <p class="small">Your claim allocation: <strong>1,500 ZUCKA</strong></p>
+      <p id="claimStatus" class="small">Status: Not started</p>
+      <p id="claimTimer" class="small">Time remaining: --:--</p>
+    </div>
+
+    <div style="min-width:220px;text-align:right">
+      <button id="initiateBtn" class="btn-primary" disabled>Initiate Claim</button>
+      <button id="finalizeBtn" class="btn-ghost" disabled>Finalize Claim</button>
+    </div>
+  </div>
+
+  <p class="small" style="margin-top:12px">Note: fee amount is shown only when you finalize — press <em>Finalize Claim</em> and you'll see the exact BNB required before any payment is made.</p>
 </div>
 
-<footer class="small">
+<!-- Stats & Contracts -->
+<div class="card">
+  <h2>On-chain Stats & Verified Contracts</h2>
+
+  <div class="inline" style="align-items:flex-start">
+    <div style="flex:1">
+      <p class="small">Distributor token balance: <strong id="distTokenBalance">--</strong></p>
+      <p class="small">Total Distributed: <strong id="totalClaimed">--</strong></p>
+      <p class="small">Total Donations (BNB forwarded): <strong id="totalDonatedBNB">--</strong></p>
+    </div>
+
+    <div style="min-width:360px">
+      <div style="margin-bottom:8px">
+        <div class="small">Token (ZUCKA)</div>
+        <div class="inline" style="align-items:center">
+          <div class="address" id="tokenAddr">0x54bff3901d7d27ffe21b9a23bc8efb48c9847048</div>
+          <button class="copy-btn" data-copy="0x54bff3901d7d27ffe21b9a23bc8efb48c9847048">Copy</button>
+          <a class="small" style="margin-left:8px" href="https://bscscan.com/address/0x54bff3901d7d27ffe21b9a23bc8efb48c9847048#code" target="_blank">BscScan</a>
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px">
+        <div class="small">Distributor</div>
+        <div class="inline" style="align-items:center">
+          <div class="address" id="distributorAddr">0xec222Dba73C17877773E411D15904bf205FbA149</div>
+          <button class="copy-btn" data-copy="0xec222Dba73C17877773E411D15904bf205FbA149">Copy</button>
+          <a class="small" style="margin-left:8px" href="https://bscscan.com/address/0xec222Dba73C17877773E411D15904bf205FbA149#code" target="_blank">BscScan</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="small">Treasury</div>
+        <div class="inline" style="align-items:center">
+          <div class="address">0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91</div>
+          <button class="copy-btn" data-copy="0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91">Copy</button>
+          <a class="small" style="margin-left:8px" href="https://bscscan.com/address/0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91" target="_blank">BscScan</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr style="border-color:#111;margin:12px 0" />
+  <div class="small muted">Quick verification: Open each contract's <strong>Read Contract</strong> on BscScan and confirm the addresses & totals. All actions (initiate/finalize/donate) emit events you can inspect directly on-chain.</div>
+</div>
+
+<footer>
   ©2025 Zuckabot • Distributor: 0xec222Dba73C17877773E411D15904bf205FbA149 • Treasury: 0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91
 </footer>
 
-<!-- ethers v5 -->
+<!-- Confirmation Modal (shown only when user clicks finalize) -->
+<div id="modalBackdrop" class="modal-backdrop">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 style="margin-top:0">Finalize Claim — Confirm</h3>
+    <div id="modalBody" class="small">
+      <p>Fetching required fee…</p>
+    </div>
+    <div style="margin-top:12px;text-align:right">
+      <button id="modalCancel" class="btn-ghost">Cancel</button>
+      <button id="modalConfirm" class="btn-primary">Confirm & Pay</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ethers.js -->
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 <script>
 (() => {
-  // ---------- Config (from user)
+  // ---------- CONFIG from you
   const TOKEN_ADDR = '0x54bff3901d7d27ffe21b9a23bc8efb48c9847048';
   const DISTRIBUTOR_ADDR = '0xec222Dba73C17877773E411D15904bf205FbA149';
   const TREASURY_ADDR = '0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91';
   const BSCSCAN_BASE = 'https://bscscan.com';
 
-  // Full ABIs (from user)
+  // ABIs (as supplied)
   const tokenAbi = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}];
 
   const distributorAbi = [{"inputs":[{"internalType":"address","name":"_zuckaToken","type":"address"},{"internalType":"address","name":"_priceFeed","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"zuckaAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"bnbPaid","type":"uint256"}],"name":"ClaimFinalized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ClaimInitiated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"bnbAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"zuckaAmount","type":"uint256"}],"name":"Donated","type":"event"},{"inputs":[],"name":"BASE_RATE_PER_USD18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"CLAIM_AMOUNT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"CLAIM_FEE_USD18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TREASURY","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"donate","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"finalizeClaim","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"getLatestBNBPrice18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotals","outputs":[{"internalType":"uint256","name":"tokensDistributed","type":"uint256"},{"internalType":"uint256","name":"bnbCollectedWei","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"hasClaimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"initiateClaim","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"pendingClaimTimestamp","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"priceFeed","outputs":[{"internalType":"contract AggregatorV3Interface","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"requiredClaimWei","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"secondsUntilFinalize","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalClaimedTokens","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalDonatedBNB","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"usd18","type":"uint256"}],"name":"usd18ToWei","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"weiAmount","type":"uint256"}],"name":"weiToUsd18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"zucka","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}];
 
-  // Read-only provider (BSC)
+  // Read-only provider
   const readProvider = new ethers.providers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
-
   const distributorRead = new ethers.Contract(DISTRIBUTOR_ADDR, distributorAbi, readProvider);
   const tokenRead = new ethers.Contract(TOKEN_ADDR, tokenAbi, readProvider);
 
@@ -157,20 +251,74 @@
   const walletInfo = document.getElementById('walletInfo');
   const initiateBtn = document.getElementById('initiateBtn');
   const finalizeBtn = document.getElementById('finalizeBtn');
-  const bnbPriceEl = document.getElementById('bnbPrice');
-  const claimFeeEl = document.getElementById('claimFee');
   const distTokenBalanceEl = document.getElementById('distTokenBalance');
   const totalClaimedEl = document.getElementById('totalClaimed');
   const totalDonatedEl = document.getElementById('totalDonatedBNB');
-  const distributorLink = document.getElementById('distributorLink');
-  const tokenLink = document.getElementById('tokenLink');
   const claimStatusEl = document.getElementById('claimStatus');
   const claimTimerEl = document.getElementById('claimTimer');
+  const addTokenBtn = document.getElementById('addTokenBtn');
 
-  distributorLink.href = `${BSCSCAN_BASE}/address/${DISTRIBUTOR_ADDR}`;
-  tokenLink.href = `${BSCSCAN_BASE}/address/${TOKEN_ADDR}`;
+  // modal
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const modalBody = document.getElementById('modalBody');
+  const modalCancel = document.getElementById('modalCancel');
+  const modalConfirm = document.getElementById('modalConfirm');
 
-  // Wallet signer contract handles (set on connect)
+  // copy buttons
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async (ev) => {
+      const v = ev.currentTarget.getAttribute('data-copy');
+      try {
+        await navigator.clipboard.writeText(v);
+        showNotification('Address copied', 'success');
+      } catch(e) {
+        showNotification('Copy failed — select & copy manually', 'error');
+      }
+    });
+  });
+
+  // simple notification
+  function showNotification(msg, type='success', t=3800){
+    notifyEl.textContent = msg;
+    notifyEl.style.display = 'block';
+    notifyEl.style.background = type === 'error' ? 'var(--danger)' : 'var(--success)';
+    notifyEl.style.color = type === 'error' ? '#fff' : '#000';
+    setTimeout(()=> { notifyEl.style.display = 'none'; }, t);
+  }
+
+  // format big numbers
+  async function formatTokenAmount(raw, decimals) {
+    try { return Number(ethers.utils.formatUnits(raw, decimals)).toLocaleString(undefined, {maximumFractionDigits: 6}); }
+    catch(e){ return raw.toString(); }
+  }
+
+  // refresh read-only data
+  async function refreshReadOnlyData(){
+    try {
+      const price18 = await distributorRead.getLatestBNBPrice18();
+      // don't show fee here per your instruction, only used when finalizing
+      const requiredWei = await distributorRead.requiredClaimWei(); // used on finalize
+
+      const totals = await distributorRead.getTotals();
+      const totalClaimed = totals.tokensDistributed;
+      const totalDonatedWei = totals.bnbCollectedWei;
+
+      const decimals = await tokenRead.decimals();
+      const symbol = await tokenRead.symbol();
+      const distBalRaw = await tokenRead.balanceOf(DISTRIBUTOR_ADDR);
+      distTokenBalanceEl.textContent = (await formatTokenAmount(distBalRaw, decimals)) + ` ${symbol}`;
+
+      totalClaimedEl.textContent = (await formatTokenAmount(totalClaimed, decimals)) + ` ${symbol}`;
+      totalDonatedEl.textContent = (Number(ethers.utils.formatEther(totalDonatedWei))).toFixed(6) + ' BNB';
+    } catch(err){
+      console.error('read-only refresh failed', err);
+      distTokenBalanceEl.textContent = '--';
+      totalClaimedEl.textContent = '--';
+      totalDonatedEl.textContent = '--';
+    }
+  }
+
+  // wallet & signer
   let provider = null;
   let signer = null;
   let distributor = null;
@@ -181,100 +329,26 @@
   let tasks = {telegram:{verified:false}, x:{verified:false}, facebook:{verified:false}};
   try { const saved = JSON.parse(localStorage.getItem('zuckabotData')||'{}'); if (saved.tasks) tasks = saved.tasks; } catch(e){}
 
-  // notify
-  function notify(msg, type='success', t=3500){
-    notifyEl.textContent = msg;
-    notifyEl.className = `notification ${type==='error'?'error':'success'}`;
-    notifyEl.style.display = 'block';
-    setTimeout(()=>{ notifyEl.style.display='none'; }, t);
-  }
-
-  // format big numbers with decimals
-  async function formatTokenAmount(raw, decimals) {
-    try { return Number(ethers.utils.formatUnits(raw, decimals)).toLocaleString(undefined, {maximumFractionDigits: 6}); }
-    catch(e){ return raw.toString(); }
-  }
-
-  // fetch on-chain stats (read-only)
-  async function refreshReadOnlyData(){
-    try {
-      // Chainlink price scaled to 1e18
-      const price18 = await distributorRead.getLatestBNBPrice18();
-      const priceUsd = Number(ethers.utils.formatUnits(price18, 18));
-      bnbPriceEl.textContent = `$${priceUsd.toFixed(2)}`;
-
-      // claim fee in wei -> display BNB
-      const requiredWei = await distributorRead.requiredClaimWei();
-      const requiredBNB = ethers.utils.formatEther(requiredWei);
-      claimFeeEl.textContent = Number(requiredBNB).toString();
-
-      // totals
-      const totalClaimed = await distributorRead.totalClaimedTokens();
-      const totalDonatedWei = await distributorRead.totalDonatedBNB();
-
-      // token decimals & symbol
-      const decimals = await tokenRead.decimals();
-      const symbol = await tokenRead.symbol();
-
-      // distributor token balance
-      const distBalRaw = await tokenRead.balanceOf(DISTRIBUTOR_ADDR);
-      distTokenBalanceEl.textContent = (await formatTokenAmount(distBalRaw, decimals)) + ` ${symbol}`;
-
-      totalClaimedEl.textContent = (await formatTokenAmount(totalClaimed, decimals)) + ` ${symbol}`;
-      totalDonatedEl.textContent = (Number(ethers.utils.formatEther(totalDonatedWei))).toFixed(6) + ' BNB';
-    } catch(err){
-      console.error('read-only refresh failed', err);
-      bnbPriceEl.textContent = 'Unavailable';
-      claimFeeEl.textContent = '--';
-      distTokenBalanceEl.textContent = '--';
-      totalClaimedEl.textContent = '--';
-      totalDonatedEl.textContent = '--';
-    }
-  }
-
-  // connect wallet & signer
+  // connect wallet
   async function connectWallet(){
-    if (!window.ethereum){ notify('No wallet found — install MetaMask or use Trust Wallet in-app browser', 'error'); return; }
+    if (!window.ethereum){ showNotification('No wallet found — install MetaMask or use Trust Wallet', 'error'); return; }
     try {
-      // request accounts
       await window.ethereum.request({ method: 'eth_requestAccounts' });
       provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
       signer = provider.getSigner();
       userAddress = await signer.getAddress();
 
-      // network check + auto-switch
       const net = await provider.getNetwork();
       if (net.chainId !== 56) {
-        // try to switch the network in wallet
         try {
           await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
-          notify('Switched wallet to BSC Mainnet');
+          showNotification('Switched wallet to BSC Mainnet');
         } catch (switchErr) {
-          // If the chain is not added, request to add it
-          if (switchErr.code === 4902 || (switchErr.data && switchErr.data.originalError && switchErr.data.originalError.code === 4902)) {
-            try {
-              await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [{
-                  chainId: '0x38',
-                  chainName: 'BSC Mainnet',
-                  nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                  rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                  blockExplorerUrls: ['https://bscscan.com']
-                }]
-              });
-              notify('BSC added to wallet — please switch to it.');
-            } catch(addErr) {
-              console.error('add chain failed', addErr);
-              notify('Please switch your wallet to BSC (Mainnet)', 'error', 5000);
-            }
-          } else {
-            notify('Please switch your wallet to BSC (Mainnet)', 'error', 5000);
-          }
+          // ask user to switch manually
+          showNotification('Please switch wallet to BSC Mainnet', 'error', 6000);
         }
       }
 
-      // re-init provider & signer in case net changed
       provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
       signer = provider.getSigner();
 
@@ -282,21 +356,17 @@
       token = new ethers.Contract(TOKEN_ADDR, tokenAbi, signer);
 
       walletInfo.textContent = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
-      notify('Wallet connected');
+      showNotification('Wallet connected');
 
-      // wire listener
       window.ethereum.on('accountsChanged', handleAccountsChanged);
       window.ethereum.on('chainChanged', () => { location.reload(); });
 
-      // refresh everything both read-only and user-specific
       await refreshReadOnlyData();
       await refreshUserState();
-
-      // enable/disable buttons based on tasks + state
       updateButtons();
     } catch(err){
       console.error('connect failed', err);
-      notify('Connection failed: ' + (err && err.message ? err.message : err), 'error', 4000);
+      showNotification('Connection failed: ' + (err && err.message ? err.message : err), 'error', 5000);
     }
   }
 
@@ -305,7 +375,7 @@
   function handleAccountsChanged(accounts){
     if (!accounts || accounts.length === 0) {
       walletInfo.textContent = 'Not connected';
-      notify('Wallet disconnected', 'error');
+      showNotification('Wallet disconnected', 'error');
       userAddress = null;
       distributor = null;
       token = null;
@@ -320,39 +390,38 @@
 
   // add token to wallet
   async function addToken(){
-    if (!window.ethereum){ notify('No wallet found', 'error'); return; }
+    if (!window.ethereum){ showNotification('No wallet found', 'error'); return; }
     try {
       await window.ethereum.request({
         method: 'wallet_watchAsset',
         params: {
           type: 'ERC20',
-          options: { address: TOKEN_ADDR, symbol: 'ZUCKA', decimals: 18, image: 'https://zuckabot.com/icon.png' }
+          options: { address: TOKEN_ADDR, symbol: 'ZUCKA', decimals: 18, image: 'https://zuckabot.xyz/icon.png' }
         }
       });
-      notify('Token add requested');
-    } catch(e){ console.error(e); notify('Failed to add token', 'error'); }
+      showNotification('Token add requested');
+    } catch(e){ console.error(e); showNotification('Failed to add token', 'error'); }
   }
+  addTokenBtn.addEventListener('click', addToken);
 
-  // tasks verification (client-side)
+  // tasks verify (local)
   function verifyTask(task){
     const el = document.getElementById(task + 'Proof');
-    if (!el) {
-      notify('Proof input missing', 'error'); return;
-    }
+    if (!el) { showNotification('Proof input missing', 'error'); return; }
     const val = el.value.trim();
-    if (!val){ notify('Paste a proof link before verifying', 'error'); return; }
-    try { new URL(val); } catch(e){ notify('Invalid URL', 'error'); return; }
+    if (!val){ showNotification('Paste a proof link before verifying', 'error'); return; }
+    try { new URL(val); } catch(e){ showNotification('Invalid URL', 'error'); return; }
 
     tasks[task] = { verified: true, timestamp: Date.now() };
     document.getElementById('check'+task.charAt(0).toUpperCase()+task.slice(1)).style.display = 'inline';
-    document.getElementById(task+'Status').textContent = 'Submitted';
-    notify('Task submitted; it will auto-verify in 10 minutes');
+    document.getElementById(task+'Status')?.textContent = 'Submitted';
+    showNotification('Task submitted; it will auto-verify in 10 minutes');
 
     setTimeout(() => {
-      document.getElementById(task+'Status').textContent = 'Verified';
+      document.getElementById(task+'Status')?.textContent = 'Verified';
       document.getElementById('check'+task.charAt(0).toUpperCase()+task.slice(1)).style.display = 'inline';
       tasks[task].verified = true;
-      notify(`${task} verified`, 'success');
+      showNotification(`${task} verified`, 'success');
       saveLocal();
       updateButtons();
     }, 600000);
@@ -363,7 +432,7 @@
 
   function saveLocal(){ localStorage.setItem('zuckabotData', JSON.stringify({tasks})); }
 
-  // refresh user-specific on-chain state
+  // refresh user-specific state
   async function refreshUserState(){
     if (!distributor || !userAddress) return;
     try {
@@ -398,7 +467,7 @@
     }
   }
 
-  // countdown UI
+  // countdown
   let countdownInterval = null;
   function startCountdown(seconds){
     clearInterval(countdownInterval);
@@ -408,74 +477,98 @@
     countdownInterval = setInterval(() => {
       remaining = Math.max(0, remaining - 1);
       claimTimerEl.textContent = `Time remaining: ${formatRemaining(remaining)}`;
-      if (remaining === 0) { clearInterval(countdownInterval); claimTimerEl.textContent = 'Ready to finalize!'; finalizeBtn.disabled = false; notify('Your claim is ready to finalize', 'success'); }
+      if (remaining === 0) { clearInterval(countdownInterval); claimTimerEl.textContent = 'Ready to finalize!'; finalizeBtn.disabled = false; showNotification('Your claim is ready to finalize', 'success'); }
     }, 1000);
   }
   function formatRemaining(sec){ const m=Math.floor(sec/60); const s=sec%60; return `${m}:${s.toString().padStart(2,'0')}`; }
 
-  // enable/disable buttons based on tasks and wallet state
+  // update buttons depending on tasks/wallet
   function updateButtons(){
     const allTasks = tasks.telegram && tasks.x && tasks.facebook && tasks.telegram.verified && tasks.x.verified && tasks.facebook.verified;
     initiateBtn.disabled = !(allTasks && !!userAddress && !!distributor);
   }
 
-  // Initiate claim (signed tx)
+  // initiate claim (signed tx)
   initiateBtn.addEventListener('click', async () => {
-    if (!distributor) { notify('Wallet not connected', 'error'); return; }
+    if (!distributor) { showNotification('Wallet not connected', 'error'); return; }
     try {
       initiateBtn.disabled = true;
-      notify('Sending initiateClaim() transaction...');
+      showNotification('Sending initiateClaim() transaction...');
       const tx = await distributor.initiateClaim();
       const rcpt = await tx.wait();
-      notify(`initiateClaim tx sent. Hash: ${rcpt.transactionHash}`, 'success', 6000);
-      // show bscscan link
+      showNotification('initiateClaim tx sent', 'success', 6000);
       window.open(`${BSCSCAN_BASE}/tx/${rcpt.transactionHash}`, '_blank');
       await refreshUserState();
     } catch(err){
       console.error('initiateClaim failed', err);
-      notify('initiateClaim failed: ' + (err && err.message ? err.message : err), 'error', 6000);
+      showNotification('initiateClaim failed: ' + (err && err.message ? err.message : err), 'error', 6000);
       initiateBtn.disabled = false;
     }
   });
 
-  // Finalize claim (send required wei)
+  // finalize flow: show modal with required fee, require user confirmation
   finalizeBtn.addEventListener('click', async () => {
-    if (!distributor) { notify('Wallet not connected', 'error'); return; }
+    if (!distributor) { showNotification('Wallet not connected', 'error'); return; }
     try {
-      finalizeBtn.disabled = true;
-      notify('Fetching required fee...');
-      // ensure we use signer to read (same chain)
+      // fetch required wei (live) and show to user before sending
+      modalBody.innerHTML = '<p class="small">Fetching required fee…</p>';
+      modalBackdrop.style.display = 'flex';
+
       const requiredWei = await distributor.requiredClaimWei();
-      notify(`Sending finalizeClaim() with value ${ethers.utils.formatEther(requiredWei)} BNB`);
-      const tx = await distributor.finalizeClaim({ value: requiredWei });
-      const rcpt = await tx.wait();
-      notify(`Claim finalized! Tx: ${rcpt.transactionHash}`, 'success', 7000);
-      window.open(`${BSCSCAN_BASE}/tx/${rcpt.transactionHash}`, '_blank');
-      // refresh read & user state
-      await refreshReadOnlyData();
-      await refreshUserState();
+      const requiredBNB = ethers.utils.formatEther(requiredWei);
+
+      // show price & confirm text
+      modalBody.innerHTML = `<p class="small">To finalize your claim, you will send <strong>${requiredBNB} BNB</strong> (this is the live conversion for the small claim fee).<br/>
+      The transaction will forward the BNB to the public Treasury and you will receive 1,500 ZUCKA on-chain.</p>
+      <p class="small muted">You will see a wallet confirmation next. No fee will be sent until you click <em>Confirm & Pay</em>.</p>`;
+
+      // attach confirm handler (one-time)
+      const onConfirm = async () => {
+        modalConfirm.disabled = true;
+        modalCancel.disabled = true;
+        try {
+          showNotification('Sending finalizeClaim() (you will confirm in wallet)...', 'success', 3000);
+          const tx = await distributor.finalizeClaim({ value: requiredWei });
+          const rcpt = await tx.wait();
+          showNotification('Claim finalized!','success',7000);
+          window.open(`${BSCSCAN_BASE}/tx/${rcpt.transactionHash}`, '_blank');
+          await refreshReadOnlyData();
+          await refreshUserState();
+        } catch(err) {
+          console.error('finalizeClaim failed', err);
+          showNotification('finalizeClaim failed: ' + (err && err.message ? err.message : err), 'error', 6000);
+        } finally {
+          modalBackdrop.style.display = 'none';
+          modalConfirm.disabled = false;
+          modalCancel.disabled = false;
+          modalConfirm.removeEventListener('click', onConfirm);
+        }
+      };
+
+      modalConfirm.addEventListener('click', onConfirm);
+
+      modalCancel.onclick = () => {
+        modalBackdrop.style.display = 'none';
+        modalConfirm.removeEventListener('click', onConfirm);
+      };
+
     } catch(err){
-      console.error('finalizeClaim failed', err);
-      notify('finalizeClaim failed: ' + (err && err.message ? err.message : err), 'error', 6000);
-      finalizeBtn.disabled = false;
+      console.error('finalize prepare failed', err);
+      showNotification('Failed to fetch fee: ' + (err && err.message ? err.message : err), 'error', 6000);
+      modalBackdrop.style.display = 'none';
     }
   });
 
   // initial bootstrap
   (async function init(){
-    // load tasks local state into UI
     try {
-      if (tasks.telegram && tasks.telegram.verified) { document.getElementById('checkTelegram').style.display='inline'; document.getElementById('telegramStatus').textContent='Verified'; }
-      if (tasks.x && tasks.x.verified) { document.getElementById('checkX').style.display='inline'; document.getElementById('xStatus').textContent='Verified'; }
-      if (tasks.facebook && tasks.facebook.verified) { document.getElementById('checkFB').style.display='inline'; document.getElementById('facebookStatus').textContent='Verified'; }
+      if (tasks.telegram && tasks.telegram.verified) { document.getElementById('checkTelegram').style.display='inline'; }
+      if (tasks.x && tasks.x.verified) { document.getElementById('checkX').style.display='inline'; }
+      if (tasks.facebook && tasks.facebook.verified) { document.getElementById('checkFB').style.display='inline'; }
     } catch(e){}
 
-    // fetch read-only chain data once
     await refreshReadOnlyData();
-    // refresh every 30s
     setInterval(refreshReadOnlyData, 30000);
-
-    // attempt to enable buttons state (may be disabled until wallet)
     updateButtons();
   })();
 
