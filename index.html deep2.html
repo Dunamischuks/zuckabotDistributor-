@@ -65,15 +65,23 @@
   footer{margin-top:22px;text-align:center;color:var(--muted);font-size:13px}
   .txlink{color:var(--accent1);text-decoration:none}
   .hidden{display:none}
+
+  /* notification */
+  #notification { position: fixed; right: 18px; top: 18px; padding: 12px 14px; border-radius: 10px; display:none; z-index:9999; font-weight:700; }
+  #notification.success { background: rgba(125,249,255,0.9); color:#001; }
+  #notification.error { background: rgba(255,107,107,0.95); color:#001; }
+
 </style>
 </head>
 <body>
 <div class="bg-canvas"></div>
 
+<div id="notification" class=""></div>
+
 <div class="wrap">
   <header>
     <div class="brand">
-      <div class="logo pulse"><img alt="Zuckabot" id="logoImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAMHElEQVR4nO3dy5FcyQ2FYVBBE0Y+UL" /></div>
+      <div class="logo pulse"><img alt="Zuckabot" id="logoImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAMHElEQVR4nO3dy5Fc...F1kvmgEAAAAAAAAAAAAAAAAAgLo+ZD8A+PjXP79/X/0zf/v9A/XSDBtalEeDX0VA" /></div>
       <div>
         <h1>Zuckabot</h1>
         <div class="tag">Where AI meets Meme Culture — Built for Virality. Powered by Community.</div>
@@ -250,354 +258,357 @@
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
 <script>
-(async function(){
-  // --------------------------
-  // Config (addresses + ABIs)
-  // --------------------------
-  const TOKEN_ADDR = '0x54bff3901d7d27ffe21b9a23bc8efb48c9847048';
-  const DISTRIBUTOR_ADDR = '0xec222Dba73C17877773E411D15904bf205FbA149';
-  const TREASURY_ADDR = '0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91';
-  const BSC_RPC = 'https://bsc-dataseed.binance.org/';
-  const BSCSCAN_BASE = 'https://bscscan.com';
-  const GIVEAWAY_CAP = ethers.BigNumber.from("200000000").mul(ethers.BigNumber.from(10).pow(18)); // 200M * 1e18
+document.addEventListener('DOMContentLoaded', function(){
+  (async function(){
+    // --------------------------
+    // Config (addresses + ABIs)
+    // --------------------------
+    const TOKEN_ADDR = '0x54bff3901d7d27ffe21b9a23bc8efb48c9847048';
+    const DISTRIBUTOR_ADDR = '0xec222Dba73C17877773E411D15904bf205FbA149';
+    const TREASURY_ADDR = '0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91';
+    const BSC_RPC = 'https://bsc-dataseed.binance.org/';
+    const BSCSCAN_BASE = 'https://bscscan.com';
+    const GIVEAWAY_CAP = ethers.BigNumber.from("200000000").mul(ethers.BigNumber.from(10).pow(18)); // 200M * 1e18
 
-  // token ABI (user supplied)
-  const tokenAbi = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}];
+    // token ABI (user supplied)
+    const tokenAbi = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}];
 
-  // distributor ABI (user supplied)
-  const distributorAbi = [{"inputs":[{"internalType":"address","name":"_zuckaToken","type":"address"},{"internalType":"address","name":"_priceFeed","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"zuckaAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"bnbPaid","type":"uint256"}],"name":"ClaimFinalized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ClaimInitiated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"bnbAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"zuckaAmount","type":"uint256"}],"name":"Donated","type":"event"},{"inputs":[],"name":"BASE_RATE_PER_USD18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"CLAIM_AMOUNT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"CLAIM_FEE_USD18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TREASURY","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"donate","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"finalizeClaim","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"getLatestBNBPrice18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotals","outputs":[{"internalType":"uint256","name":"tokensDistributed","type":"uint256"},{"internalType":"uint256","name":"bnbCollectedWei","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"hasClaimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"initiateClaim","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"pendingClaimTimestamp","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"priceFeed","outputs":[{"internalType":"contract AggregatorV3Interface","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"requiredClaimWei","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"secondsUntilFinalize","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalClaimedTokens","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalDonatedBNB","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"usd18","type":"uint256"}],"name":"usd18ToWei","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"weiAmount","type":"uint256"}],"name":"weiToUsd18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"zucka","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}];
+    // distributor ABI (user supplied)
+    const distributorAbi = [{"inputs":[{"internalType":"address","name":"_zuckaToken","type":"address"},{"internalType":"address","name":"_priceFeed","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"zuckaAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"bnbPaid","type":"uint256"}],"name":"ClaimFinalized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ClaimInitiated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"bnbAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"zuckaAmount","type":"uint256"}],"name":"Donated","type":"event"},{"inputs":[],"name":"BASE_RATE_PER_USD18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"CLAIM_AMOUNT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"CLAIM_FEE_USD18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TREASURY","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"donate","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"finalizeClaim","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"getLatestBNBPrice18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotals","outputs":[{"internalType":"uint256","name":"tokensDistributed","type":"uint256"},{"internalType":"uint256","name":"bnbCollectedWei","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"hasClaimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"initiateClaim","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"pendingClaimTimestamp","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"priceFeed","outputs":[{"internalType":"contract AggregatorV3Interface","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"requiredClaimWei","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"secondsUntilFinalize","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalClaimedTokens","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalDonatedBNB","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"usd18","type":"uint256"}],"name":"usd18ToWei","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"weiAmount","type":"uint256"}],"name":"weiToUsd18","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"zucka","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}];
 
-  // read-only provider & contracts
-  const readProvider = new ethers.providers.JsonRpcProvider(BSC_RPC);
-  const distributorRead = new ethers.Contract(DISTRIBUTOR_ADDR, distributorAbi, readProvider);
-  const tokenRead = new ethers.Contract(TOKEN_ADDR, tokenAbi, readProvider);
+    // read-only provider & contracts
+    const readProvider = new ethers.providers.JsonRpcProvider(BSC_RPC);
+    const distributorRead = new ethers.Contract(DISTRIBUTOR_ADDR, distributorAbi, readProvider);
+    const tokenRead = new ethers.Contract(TOKEN_ADDR, tokenAbi, readProvider);
 
-  // DOM refs
-  const connectBtn = document.getElementById('connectBtn');
-  const disconnectBtn = document.getElementById('disconnectBtn');
-  const addTokenBtn = document.getElementById('addTokenBtn');
-  const initiateBtn = document.getElementById('initiateBtn');
-  const finalizeBtn = document.getElementById('finalizeBtn');
-  const verifyBtn = document.getElementById('verifyBtn');
-  const verifyStatus = document.getElementById('verifyStatus');
-  const onchainStatus = document.getElementById('onchainStatus');
-  const bnbPriceEl = document.getElementById('bnbPrice');
-  const claimFeeEl = document.getElementById('claimFee');
-  const distBalEl = document.getElementById('distBalance');
-  const totalClaimedEl = document.getElementById('totalClaimed');
-  const totalDonatedEl = document.getElementById('totalDonated');
-  const recentClaimsEl = document.getElementById('recentClaims');
-  const progressFill = document.getElementById('progressFill');
-  const progressText = document.getElementById('progressText');
-  const claimTimerEl = document.getElementById('claimTimer');
-  const onchainStatusEl = document.getElementById('onchainStatus');
+    // DOM refs
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const addTokenBtn = document.getElementById('addTokenBtn');
+    const initiateBtn = document.getElementById('initiateBtn');
+    const finalizeBtn = document.getElementById('finalizeBtn');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const verifyStatus = document.getElementById('verifyStatus');
+    const onchainStatus = document.getElementById('onchainStatus');
+    const bnbPriceEl = document.getElementById('bnbPrice');
+    const claimFeeEl = document.getElementById('claimFee');
+    const distBalEl = document.getElementById('distBalance');
+    const totalClaimedEl = document.getElementById('totalClaimed');
+    const totalDonatedEl = document.getElementById('totalDonated');
+    const recentClaimsEl = document.getElementById('recentClaims');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const claimTimerEl = document.getElementById('claimTimer');
+    const onchainStatusEl = document.getElementById('onchainStatus');
 
-  // runtime state
-  let provider = null;
-  let signer = null;
-  let userAddress = null;
-  let distributor = null;
-  let token = null;
-  let verified = false;
-  let tasks = { telegram: null, x: null, facebook: null };
-  let countdownInterval = null;
+    // runtime state
+    let provider = null;
+    let signer = null;
+    let userAddress = null;
+    let distributor = null;
+    let token = null;
+    let verified = false;
+    let tasks = { telegram: null, x: null, facebook: null };
+    let countdownInterval = null;
 
-  // helper: show toast-style notifications (simple)
-  function notify(msg, err=false, ms=4000){
-    const el = document.getElementById('notification');
-    el.textContent = msg;
-    el.className = err ? 'notification error' : 'notification success';
-    el.style.display = 'block';
-    setTimeout(()=>{ el.style.display='none'; }, ms);
-  }
+    // helper: show toast-style notifications (simple)
+    function notify(msg, isError=false, ms=4000){
+      const el = document.getElementById('notification');
+      el.textContent = msg;
+      el.className = isError ? 'error' : 'success';
+      el.classList.add(isError ? 'error' : 'success');
+      el.style.display = 'block';
+      setTimeout(()=>{ el.style.display = 'none'; el.className=''; }, ms);
+    }
 
-  // simple URL validation
-  function isValidUrl(s){ try{ new URL(s); return true } catch(e){ return false } }
+    // simple URL validation
+    function isValidUrl(s){ try{ new URL(s); return true } catch(e){ return false } }
 
-  // refresh read-only on-chain data
-  async function refreshReadOnly(){
-    try {
-      const price18 = await distributorRead.getLatestBNBPrice18();
-      const priceUsd = Number(ethers.utils.formatUnits(price18,18));
-      bnbPriceEl.textContent = `$${priceUsd.toFixed(2)}`;
-    } catch(e){ console.error('BNB price fetch failed', e); bnbPriceEl.textContent = 'Unavailable'; }
+    // refresh read-only on-chain data
+    async function refreshReadOnly(){
+      try {
+        const price18 = await distributorRead.getLatestBNBPrice18();
+        const priceUsd = Number(ethers.utils.formatUnits(price18,18));
+        bnbPriceEl.textContent = `$${priceUsd.toFixed(2)}`;
+      } catch(e){ console.error('BNB price fetch failed', e); bnbPriceEl.textContent = 'Unavailable'; }
 
-    try {
-      const req = await distributorRead.requiredClaimWei();
-      claimFeeEl.textContent = `${ethers.utils.formatEther(req)} BNB`;
-    } catch(e){ console.error('requiredClaimWei failed', e); claimFeeEl.textContent = '-- BNB'; }
+      try {
+        const req = await distributorRead.requiredClaimWei();
+        claimFeeEl.textContent = `${ethers.utils.formatEther(req)} BNB`;
+      } catch(e){ console.error('requiredClaimWei failed', e); claimFeeEl.textContent = '-- BNB'; }
 
-    try {
-      const dec = await tokenRead.decimals();
-      const symbol = await tokenRead.symbol();
-      const distBalRaw = await tokenRead.balanceOf(DISTRIBUTOR_ADDR);
-      const totalClaimedRaw = await distributorRead.totalClaimedTokens();
-      const totalDonatedWei = await distributorRead.totalDonatedBNB();
+      try {
+        const dec = await tokenRead.decimals();
+        const symbol = await tokenRead.symbol();
+        const distBalRaw = await tokenRead.balanceOf(DISTRIBUTOR_ADDR);
+        const totalClaimedRaw = await distributorRead.totalClaimedTokens();
+        const totalDonatedWei = await distributorRead.totalDonatedBNB();
 
-      distBalEl.textContent = `${Number(ethers.utils.formatUnits(distBalRaw,dec)).toLocaleString()} ${symbol}`;
-      totalClaimedEl.textContent = `${Number(ethers.utils.formatUnits(totalClaimedRaw,dec)).toLocaleString()} ${symbol}`;
-      totalDonatedEl.textContent = `${Number(ethers.utils.formatEther(totalDonatedWei)).toFixed(6)} BNB`;
+        distBalEl.textContent = `${Number(ethers.utils.formatUnits(distBalRaw,dec)).toLocaleString()} ${symbol}`;
+        totalClaimedEl.textContent = `${Number(ethers.utils.formatUnits(totalClaimedRaw,dec)).toLocaleString()} ${symbol}`;
+        totalDonatedEl.textContent = `${Number(ethers.utils.formatEther(totalDonatedWei)).toFixed(6)} BNB`;
 
-      // progress
-      const pct = totalClaimedRaw.mul(10000).div(GIVEAWAY_CAP).toNumber()/100; // two decimals
-      progressFill.style.width = Math.min(100, pct) + '%';
-      progressText.textContent = `Claimed ${ethers.utils.formatUnits(totalClaimedRaw,dec)} / 200,000,000 ZUCKA (${pct.toFixed(2)}%)`;
-    } catch(e){ console.error('stats fetch failed', e); distBalEl.textContent='--'; totalClaimedEl.textContent='--'; totalDonatedEl.textContent='--'; progressText.textContent='Unavailable'; }
+        // progress
+        const pct = totalClaimedRaw.mul(10000).div(GIVEAWAY_CAP).toNumber()/100; // two decimals
+        progressFill.style.width = Math.min(100, pct) + '%';
+        progressText.textContent = `Claimed ${ethers.utils.formatUnits(totalClaimedRaw,dec)} / 200,000,000 ZUCKA (${pct.toFixed(2)}%)`;
+      } catch(e){ console.error('stats fetch failed', e); distBalEl.textContent='--'; totalClaimedEl.textContent='--'; totalDonatedEl.textContent='--'; progressText.textContent='Unavailable'; }
 
-  }
+    }
 
-  // load recent ClaimFinalized events (last ~5000 blocks)
-  async function loadRecentClaims(){
-    try {
-      recentClaimsEl.innerHTML = '<li>Loading recent claims…</li>';
-      const filter = distributorRead.filters.ClaimFinalized();
-      // query recent blocks (fallback: last 5000)
-      const logs = await distributorRead.queryFilter(filter, -5000);
-      const recent = logs.slice(-6).reverse(); // show up to 5 recent
-      recentClaimsEl.innerHTML = '';
-      if (!recent || recent.length === 0) {
-        recentClaimsEl.innerHTML = '<li>No recent claims</li>';
+    // load recent ClaimFinalized events (last ~5000 blocks)
+    async function loadRecentClaims(){
+      try {
+        recentClaimsEl.innerHTML = '<li>Loading recent claims…</li>';
+        const filter = distributorRead.filters.ClaimFinalized();
+        const logs = await distributorRead.queryFilter(filter, -5000);
+        const recent = logs.slice(-6).reverse(); // show up to 5 recent
+        recentClaimsEl.innerHTML = '';
+        if (!recent || recent.length === 0) {
+          recentClaimsEl.innerHTML = '<li>No recent claims</li>';
+          return;
+        }
+        for (let ev of recent) {
+          try {
+            const user = ev.args.user;
+            const zucka = ethers.utils.formatUnits(ev.args.zuckaAmount, 18);
+            const bnb = ethers.utils.formatEther(ev.args.bnbPaid);
+            const block = await ev.getBlock();
+            const t = new Date(block.timestamp * 1000);
+            const li = document.createElement('li');
+            li.textContent = `${user.slice(0,6)}...${user.slice(-4)} claimed ${Number(zucka).toLocaleString()} ZUCKA for ${Number(bnb).toFixed(6)} BNB`;
+            recentClaimsEl.appendChild(li);
+          } catch(e){ console.error('ev parse', e) }
+        }
+      } catch(e){ console.error('recent claims failed', e); recentClaimsEl.innerHTML = '<li>Unable to load recent claims</li>'; }
+    }
+
+    // connect wallet & ensure BSC mainnet
+    async function connectWallet(){
+      if (!window.ethereum){ notify('No Web3 wallet detected. Use MetaMask or Trust Wallet in-app browser.', true); return; }
+      try {
+        provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+        await provider.send('eth_requestAccounts', []);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+
+        // chain check
+        const net = await provider.getNetwork();
+        if (net.chainId !== 56) {
+          try {
+            await window.ethereum.request({ method:'wallet_switchEthereumChain', params:[{chainId:'0x38'}] });
+            notify('Switched to BSC Mainnet');
+          } catch(switchErr){
+            // attempt to add chain if not present
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{ chainId:'0x38', chainName:'BSC Mainnet', nativeCurrency:{name:'BNB', symbol:'BNB', decimals:18}, rpcUrls:[BSC_RPC], blockExplorerUrls:[BSCSCAN_BASE]}]
+              });
+              notify('BSC network added — please switch to it in your wallet', true, 5000);
+            } catch(e){ notify('Please switch your wallet to BSC Mainnet', true, 5000); }
+          }
+        }
+
+        // re-init signer after potential switch
+        provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+        signer = provider.getSigner();
+        distributor = new ethers.Contract(DISTRIBUTOR_ADDR, distributorAbi, signer);
+        token = new ethers.Contract(TOKEN_ADDR, tokenAbi, signer);
+
+        // UI updates
+        connectBtn.classList.add('hidden');
+        disconnectBtn.classList.remove('hidden');
+        onchainStatusEl.textContent = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
+        localStorage.setItem('zuckabot_connected', '1');
+
+        // listeners
+        window.ethereum.on('accountsChanged', handleAccountsChanged);
+        window.ethereum.on('chainChanged', () => location.reload());
+
+        // initial data
+        await refreshReadOnly();
+        await refreshUserState();
+        await loadRecentClaims();
+        updateButtons();
+        notify('Wallet connected');
+      } catch(e){ console.error('connect error', e); notify('Connection failed: ' + (e.message||e), true); }
+    }
+
+    function handleAccountsChanged(accounts){
+      if (!accounts || accounts.length === 0) { disconnectWallet(); return; }
+      userAddress = accounts[0];
+      onchainStatusEl.textContent = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
+      refreshUserState();
+      updateButtons();
+    }
+
+    function disconnectWallet(){
+      provider = null; signer = null; distributor = null; token = null; userAddress = null;
+      document.getElementById('connectBtn').classList.remove('hidden');
+      document.getElementById('disconnectBtn').classList.add('hidden');
+      onchainStatusEl.textContent = 'Not connected';
+      localStorage.removeItem('zuckabot_connected');
+      notify('Disconnected', true, 1500);
+      updateButtons();
+    }
+
+    // auto-reconnect
+    if (window.ethereum && localStorage.getItem('zuckabot_connected')) {
+      setTimeout(()=>{ connectWallet(); }, 600);
+    }
+
+    // add token to wallet
+    addTokenBtn.addEventListener('click', async ()=>{
+      if (!window.ethereum){ notify('No wallet', true); return; }
+      try {
+        await window.ethereum.request({
+          method:'wallet_watchAsset',
+          params: { type:'ERC20', options:{ address:TOKEN_ADDR, symbol:'ZUCKA', decimals:18, image:document.getElementById('logoImg').src } }
+        });
+        notify('Token add requested in wallet');
+      } catch(e){ console.error(e); notify('Add token failed', true); }
+    });
+
+    // verify social proofs (client-side)
+    verifyBtn.addEventListener('click', ()=>{
+      const t = document.getElementById('telegramProof').value.trim();
+      const x = document.getElementById('xProof').value.trim();
+      const f = document.getElementById('facebookProof').value.trim();
+      if (!isValidUrl(t) || !isValidUrl(x) || !isValidUrl(f)) {
+        verifyStatus.textContent = 'Invalid link(s)';
+        verifyStatus.style.color = '#ff6b6b';
+        notify('Please paste valid URLs for all three proofs', true);
         return;
       }
-      for (let ev of recent) {
-        try {
-          const user = ev.args.user;
-          const zucka = ethers.utils.formatUnits(ev.args.zuckaAmount, 18);
-          const bnb = ethers.utils.formatEther(ev.args.bnbPaid);
-          const t = new Date(ev.blockNumber ? (await ev.getBlock()).timestamp*1000 : Date.now());
-          const li = document.createElement('li');
-          li.textContent = `${user.slice(0,6)}...${user.slice(-4)} claimed ${Number(zucka).toLocaleString()} ZUCKA for ${Number(bnb).toFixed(6)} BNB`;
-          recentClaimsEl.appendChild(li);
-        } catch(e){ console.error('ev parse', e) }
-      }
-    } catch(e){ console.error('recent claims failed', e); recentClaimsEl.innerHTML = '<li>Unable to load recent claims</li>'; }
-  }
-
-  // connect wallet & ensure BSC mainnet
-  async function connectWallet(){
-    if (!window.ethereum){ notify('No Web3 wallet detected. Use MetaMask or Trust Wallet in-app browser.', true); return; }
-    try {
-      provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
-      await provider.send('eth_requestAccounts', []);
-      signer = provider.getSigner();
-      userAddress = await signer.getAddress();
-
-      // chain check
-      const net = await provider.getNetwork();
-      if (net.chainId !== 56) {
-        try {
-          await window.ethereum.request({ method:'wallet_switchEthereumChain', params:[{chainId:'0x38'}] });
-          notify('Switched to BSC Mainnet');
-        } catch(switchErr){
-          // attempt to add chain if not present
-          try {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [{ chainId:'0x38', chainName:'BSC Mainnet', nativeCurrency:{name:'BNB', symbol:'BNB', decimals:18}, rpcUrls:[BSC_RPC], blockExplorerUrls:[BSCSCAN_BASE]}]
-            });
-            notify('BSC network added — please switch to it in your wallet', true, 5000);
-          } catch(e){ notify('Please switch your wallet to BSC Mainnet', true, 5000); }
-        }
-      }
-
-      // re-init signer after potential switch
-      provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
-      signer = provider.getSigner();
-      distributor = new ethers.Contract(DISTRIBUTOR_ADDR, distributorAbi, signer);
-      token = new ethers.Contract(TOKEN_ADDR, tokenAbi, signer);
-
-      // UI updates
-      document.getElementById('connectBtn').classList.add('hidden');
-      document.getElementById('disconnectBtn').classList.remove('hidden');
-      onchainStatusEl.textContent = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
-      localStorage.setItem('zuckabot_connected', '1');
-
-      // listeners
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-      window.ethereum.on('chainChanged', () => location.reload());
-
-      // initial data
-      await refreshReadOnly();
-      await refreshUserState();
-      await loadRecentClaims();
+      tasks = { telegram: t, x: x, facebook: f };
+      verified = true;
+      verifyStatus.textContent = 'Verified (client)';
+      verifyStatus.style.color = '#7ef3c5';
+      notify('Social proofs accepted — you may initiate claim', false);
+      document.getElementById('taskCountdown').textContent = 'Ready';
+      localStorage.setItem('zuckabot_tasks', JSON.stringify(tasks));
       updateButtons();
-      notify('Wallet connected');
-    } catch(e){ console.error('connect error', e); notify('Connection failed: ' + (e.message||e), true); }
-  }
+    });
 
-  function handleAccountsChanged(accounts){
-    if (!accounts || accounts.length === 0) { disconnectWallet(); return; }
-    userAddress = accounts[0];
-    onchainStatusEl.textContent = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
-    refreshUserState();
-    updateButtons();
-  }
+    // load saved proofs
+    (function loadProofs(){
+      try {
+        const raw = localStorage.getItem('zuckabot_tasks');
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.telegram) {
+          document.getElementById('telegramProof').value = parsed.telegram || '';
+          document.getElementById('xProof').value = parsed.x || '';
+          document.getElementById('facebookProof').value = parsed.facebook || '';
+          tasks = parsed; verified = true; verifyStatus.textContent = 'Verified (saved)'; verifyStatus.style.color = '#7ef3c5';
+        }
+      } catch(e){}
+    })();
 
-  function disconnectWallet(){
-    provider = null; signer = null; distributor = null; token = null; userAddress = null;
-    document.getElementById('connectBtn').classList.remove('hidden');
-    document.getElementById('disconnectBtn').classList.add('hidden');
-    onchainStatusEl.textContent = 'Not connected';
-    localStorage.removeItem('zuckabot_connected');
-    notify('Disconnected', true, 1500);
-    updateButtons();
-  }
-
-  // auto-reconnect
-  if (window.ethereum && localStorage.getItem('zuckabot_connected')) {
-    setTimeout(()=>{ connectWallet(); }, 600);
-  }
-
-  // add token to wallet
-  document.getElementById('addTokenBtn').addEventListener('click', async ()=>{
-    if (!window.ethereum){ notify('No wallet', true); return; }
-    try {
-      await window.ethereum.request({
-        method:'wallet_watchAsset',
-        params: { type:'ERC20', options:{ address:TOKEN_ADDR, symbol:'ZUCKA', decimals:18, image:document.getElementById('logoImg').src } }
-      });
-      notify('Token add requested in wallet');
-    } catch(e){ console.error(e); notify('Add token failed', true); }
-  });
-
-  // verify social proofs (client-side)
-  verifyBtn.addEventListener('click', ()=>{
-    const t = document.getElementById('telegramProof').value.trim();
-    const x = document.getElementById('xProof').value.trim();
-    const f = document.getElementById('facebookProof').value.trim();
-    if (!isValidUrl(t) || !isValidUrl(x) || !isValidUrl(f)) {
-      verifyStatus.textContent = 'Invalid link(s)';
-      verifyStatus.style.color = '#ff6b6b';
-      notify('Please paste valid URLs for all three proofs', true);
-      return;
+    // update buttons state
+    function updateButtons(){
+      const allTasks = verified && tasks.telegram && tasks.x && tasks.facebook;
+      const connected = !!userAddress;
+      initiateBtn.disabled = !(allTasks && connected);
+      // finalizeBtn toggled by refreshUserState
     }
-    tasks = { telegram: t, x: x, facebook: f };
-    verified = true;
-    verifyStatus.textContent = 'Verified (client)';
-    verifyStatus.style.color = '#7ef3c5';
-    notify('Social proofs accepted — you may initiate claim', false);
-    document.getElementById('taskCountdown').textContent = 'Ready';
-    localStorage.setItem('zuckabot_tasks', JSON.stringify(tasks));
-    updateButtons();
-  });
 
-  // load saved proofs
-  (function loadProofs(){
-    try {
-      const raw = localStorage.getItem('zuckabot_tasks');
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (parsed && parsed.telegram) {
-        document.getElementById('telegramProof').value = parsed.telegram || '';
-        document.getElementById('xProof').value = parsed.x || '';
-        document.getElementById('facebookProof').value = parsed.facebook || '';
-        tasks = parsed; verified = true; verifyStatus.textContent = 'Verified (saved)'; verifyStatus.style.color = '#7ef3c5';
-      }
-    } catch(e){}
-  })();
+    // refresh user specific state
+    async function refreshUserState(){
+      if (!distributor || !userAddress) return;
+      try {
+        const hasClaimed = await distributor.hasClaimed(userAddress);
+        const pending = await distributor.pendingClaimTimestamp(userAddress);
+        const secondsLeft = await distributor.secondsUntilFinalize(userAddress);
 
-  // update buttons state
-  function updateButtons(){
-    const allTasks = verified && tasks.telegram && tasks.x && tasks.facebook;
-    const connected = !!userAddress;
-    initiateBtn.disabled = !(allTasks && connected);
-    // finalizeBtn toggled by refreshUserState
-  }
-
-  // refresh user specific state
-  async function refreshUserState(){
-    if (!distributor || !userAddress) return;
-    try {
-      const hasClaimed = await distributor.hasClaimed(userAddress);
-      const pending = await distributor.pendingClaimTimestamp(userAddress);
-      const secondsLeft = await distributor.secondsUntilFinalize(userAddress);
-
-      if (hasClaimed) {
-        initiateBtn.disabled = true;
-        finalizeBtn.disabled = true;
-        claimTimerEl.textContent = 'Already claimed';
-      } else if (pending && pending.toNumber() !== 0) {
-        if (secondsLeft.toNumber() === 0) {
-          claimTimerEl.textContent = 'Ready to finalize';
-          initiateBtn.disabled = true;
-          finalizeBtn.disabled = false;
-          startCountdown(0);
-        } else {
-          startCountdown(secondsLeft.toNumber());
+        if (hasClaimed) {
           initiateBtn.disabled = true;
           finalizeBtn.disabled = true;
+          claimTimerEl.textContent = 'Already claimed';
+        } else if (pending && pending.toNumber() !== 0) {
+          if (secondsLeft.toNumber() === 0) {
+            claimTimerEl.textContent = 'Ready to finalize';
+            initiateBtn.disabled = true;
+            finalizeBtn.disabled = false;
+            startCountdown(0);
+          } else {
+            startCountdown(secondsLeft.toNumber());
+            initiateBtn.disabled = true;
+            finalizeBtn.disabled = true;
+          }
+        } else {
+          claimTimerEl.textContent = '--:--';
+          initiateBtn.disabled = !(verified && !!userAddress);
+          finalizeBtn.disabled = true;
         }
-      } else {
-        claimTimerEl.textContent = '--:--';
-        initiateBtn.disabled = !(verified && !!userAddress);
-        finalizeBtn.disabled = true;
-      }
 
-      updateButtons();
-    } catch(e){ console.error('refreshUserState err', e); }
-  }
+        updateButtons();
+      } catch(e){ console.error('refreshUserState err', e); }
+    }
 
-  function startCountdown(seconds){
-    clearInterval(countdownInterval);
-    if (seconds === 0) { claimTimerEl.textContent = 'Ready!'; finalizeBtn.disabled = false; return; }
-    let rem = seconds;
-    claimTimerEl.textContent = formatRemaining(rem);
-    countdownInterval = setInterval(()=>{
-      rem = Math.max(0, rem-1);
+    function startCountdown(seconds){
+      clearInterval(countdownInterval);
+      if (seconds === 0) { claimTimerEl.textContent = 'Ready!'; finalizeBtn.disabled = false; return; }
+      let rem = seconds;
       claimTimerEl.textContent = formatRemaining(rem);
-      if (rem === 0) { clearInterval(countdownInterval); finalizeBtn.disabled = false; notify('Your claim is ready to finalize'); }
-    }, 1000);
-  }
-  function formatRemaining(sec){ const m=Math.floor(sec/60); const s=sec%60; return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
+      countdownInterval = setInterval(()=>{
+        rem = Math.max(0, rem-1);
+        claimTimerEl.textContent = formatRemaining(rem);
+        if (rem === 0) { clearInterval(countdownInterval); finalizeBtn.disabled = false; notify('Your claim is ready to finalize'); }
+      }, 1000);
+    }
+    function formatRemaining(sec){ const m=Math.floor(sec/60); const s=sec%60; return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
 
-  // init: refresh read-only data & recent claims
-  await refreshReadOnly();
-  await loadRecentClaims();
-  setInterval(()=>{ refreshReadOnly(); loadRecentClaims(); }, 60000);
+    // init: refresh read-only data & recent claims
+    await refreshReadOnly();
+    await loadRecentClaims();
+    setInterval(()=>{ refreshReadOnly(); loadRecentClaims(); }, 60000);
 
-  // scroll CTA
-  document.getElementById('scrollClaim').addEventListener('click', ()=>{ document.getElementById('claimPanel').scrollIntoView({behavior:'smooth'}); });
+    // scroll CTA
+    document.getElementById('scrollClaim').addEventListener('click', ()=>{ document.getElementById('claimPanel').scrollIntoView({behavior:'smooth'}); });
 
-  // connect/disconnect bindings
-  connectBtn.addEventListener('click', connectWallet);
-  disconnectBtn.addEventListener('click', disconnectWallet);
+    // connect/disconnect bindings
+    connectBtn.addEventListener('click', connectWallet);
+    disconnectBtn.addEventListener('click', disconnectWallet);
 
-  // Initiate claim tx
-  initiateBtn.addEventListener('click', async ()=>{
-    if (!distributor || !userAddress) { notify('Connect your wallet first', true); return; }
-    if (!verified) { notify('Complete social tasks first', true); return; }
-    try {
-      initiateBtn.disabled = true;
-      notify('Sending initiateClaim(); confirm in wallet...');
-      const tx = await distributor.initiateClaim();
-      const rcpt = await tx.wait();
-      notify('Initiate claim tx mined: ' + rcpt.transactionHash);
-      window.open(`${BSCSCAN_BASE}/tx/${rcpt.transactionHash}`, '_blank');
-      setTimeout(()=>{ refreshReadOnly(); refreshUserState(); loadRecentClaims(); }, 1500);
-    } catch(e){ console.error('initiate error', e); notify('initiateClaim failed: ' + (e.message||e), true); initiateBtn.disabled=false; }
-  });
+    // Initiate claim tx
+    initiateBtn.addEventListener('click', async ()=>{
+      if (!distributor || !userAddress) { notify('Connect your wallet first', true); return; }
+      if (!verified) { notify('Complete social tasks first', true); return; }
+      try {
+        initiateBtn.disabled = true;
+        notify('Sending initiateClaim(); confirm in wallet...');
+        const tx = await distributor.initiateClaim();
+        const rcpt = await tx.wait();
+        notify('Initiate claim tx mined: ' + rcpt.transactionHash);
+        window.open(`${BSCSCAN_BASE}/tx/${rcpt.transactionHash}`, '_blank');
+        setTimeout(()=>{ refreshReadOnly(); refreshUserState(); loadRecentClaims(); }, 1500);
+      } catch(e){ console.error('initiate error', e); notify('initiateClaim failed: ' + (e.message||e), true); initiateBtn.disabled=false; }
+    });
 
-  // Finalize claim tx
-  finalizeBtn.addEventListener('click', async ()=>{
-    if (!distributor || !userAddress) { notify('Connect your wallet first', true); return; }
-    try {
-      finalizeBtn.disabled = true;
-      notify('Fetching required fee, confirm tx in wallet...');
-      const requiredWei = await distributor.requiredClaimWei();
-      const tx = await distributor.finalizeClaim({ value: requiredWei });
-      const rcpt = await tx.wait();
-      notify('Claim finalized: ' + rcpt.transactionHash);
-      window.open(`${BSCSCAN_BASE}/tx/${rcpt.transactionHash}`, '_blank');
-      await refreshReadOnly(); await refreshUserState(); await loadRecentClaims();
-    } catch(e){ console.error('finalize error', e); notify('finalizeClaim failed: ' + (e.message||e), true); finalizeBtn.disabled=false; }
-  });
+    // Finalize claim tx
+    finalizeBtn.addEventListener('click', async ()=>{
+      if (!distributor || !userAddress) { notify('Connect your wallet first', true); return; }
+      try {
+        finalizeBtn.disabled = true;
+        notify('Fetching required fee, confirm tx in wallet...');
+        const requiredWei = await distributor.requiredClaimWei();
+        const tx = await distributor.finalizeClaim({ value: requiredWei });
+        const rcpt = await tx.wait();
+        notify('Claim finalized: ' + rcpt.transactionHash);
+        window.open(`${BSCSCAN_BASE}/tx/${rcpt.transactionHash}`, '_blank');
+        await refreshReadOnly(); await refreshUserState(); await loadRecentClaims();
+      } catch(e){ console.error('finalize error', e); notify('finalizeClaim failed: ' + (e.message||e), true); finalizeBtn.disabled=false; }
+    });
 
-  // helper: update when proofs change
-  document.querySelectorAll('#telegramProof,#xProof,#facebookProof').forEach(el=>{
-    el.addEventListener('input', ()=>{ verified=false; verifyStatus.textContent='Pending'; verifyStatus.style.color='var(--muted)'; localStorage.removeItem('zuckabot_tasks'); updateButtons(); });
-  });
+    // helper: update when proofs change
+    document.querySelectorAll('#telegramProof,#xProof,#facebookProof').forEach(el=>{
+      el.addEventListener('input', ()=>{ verified=false; verifyStatus.textContent='Pending'; verifyStatus.style.color='var(--muted)'; localStorage.removeItem('zuckabot_tasks'); updateButtons(); });
+    });
 
-})(); // end
+  })(); // end IIFE
+}); // DOMContentLoaded
 </script>
 </body>
 </html>
