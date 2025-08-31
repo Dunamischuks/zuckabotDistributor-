@@ -1,1148 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zuckabot Distributor v5</title>
-    <style>
-        :root {
-            --primary: #00ff00;
-            --secondary: #0a0a0a;
-            --card-bg: #111;
-            --text: #fff;
-            --input-bg: #222;
-            --danger: #ff4444;
-            --warning: #ffbb33;
-            --success: #00C851;
-            --task-btn: #3366cc;
-            --verify-btn: #00ff00;
-            --connect-btn: #ff9900;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: var(--secondary);
-            color: var(--text);
-            text-align: center;
-            margin: 0;
-            padding: 1rem;
-            line-height: 1.6;
-        }
-
-        h1, h2, h3 {
-            margin: 0.5rem 0;
-            color: var(--primary);
-        }
-
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 6px;
-            transition: all 0.2s;
-            font-weight: bold;
-        }
-
-        button:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .connect-button {
-            background: var(--connect-btn);
-            color: #000;
-        }
-
-        .task-button {
-            background: var(--task-btn);
-            color: white;
-        }
-
-        .verify-button {
-            background: var(--verify-btn);
-            color: black;
-        }
-
-        .primary-btn {
-            background: var(--primary);
-            color: var(--secondary);
-        }
-
-        .secondary-btn {
-            background: var(--input-bg);
-            color: var(--text);
-        }
-
-        .danger-btn {
-            background: var(--danger);
-            color: white;
-        }
-
-        input {
-            padding: 8px 12px;
-            margin-left: 5px;
-            width: 200px;
-            border-radius: 4px;
-            border: 1px solid #333;
-            background: var(--input-bg);
-            color: var(--text);
-        }
-
-        .task {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 10px;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .task-status {
-            min-width: 150px;
-            text-align: left;
-        }
-
-        .checkmark {
-            display: none;
-            color: var(--success);
-            font-size: 20px;
-            animation: popin 0.3s ease forwards;
-        }
-
-        @keyframes popin {
-            0% { transform: scale(0); }
-            100% { transform: scale(1); }
-        }
-
-        .progress-container {
-            width: 100%;
-            background: var(--input-bg);
-            border-radius: 8px;
-            overflow: hidden;
-            margin: 20px 0;
-            height: 20px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0;
-            background: var(--primary);
-            transition: width 0.5s;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin: 1.5rem auto;
-            max-width: 600px;
-            text-align: left;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-left: 8px;
-            font-weight: bold;
-        }
-
-        .status-pending {
-            background: var(--danger);
-            color: white;
-        }
-
-        .status-verified {
-            background: var(--success);
-            color: white;
-        }
-
-        .status-submitted {
-            background: var(--warning);
-            color: black;
-        }
-
-        .copy-btn {
-            padding: 4px 8px;
-            font-size: 12px;
-            margin-left: 8px;
-            background: var(--input-bg);
-            color: var(--text);
-        }
-
-        .address {
-            font-family: monospace;
-            font-size: 14px;
-            word-break: break-all;
-            margin: 5px 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            color: white;
-            z-index: 1000;
-            opacity: 0;
-            transform: translateX(100%);
-            transition: all 0.3s ease;
-            max-width: 300px;
-        }
-
-        .notification.success {
-            background: var(--success);
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .notification.error {
-            background: var(--danger);
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        @media (max-width: 600px) {
-            .task {
-                flex-direction: column;
-            }
-            
-            input {
-                width: 90%;
-                margin: 10px 0;
-            }
-            
-            button {
-                width: 100%;
-                margin: 5px 0;
-            }
-            
-            .card {
-                padding: 1rem;
-                margin: 1rem auto;
-            }
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .donation-tier {
-            background: #1a1a1a;
-            border-radius: 8px;
-            padding: 10px;
-            margin: 10px 0;
-            text-align: center;
-        }
-
-        .donation-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .donation-option {
-            background: #222;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .donation-option:hover {
-            background: #333;
-            transform: scale(1.05);
-        }
-
-        .donation-option.selected {
-            background: var(--primary);
-            color: black;
-            font-weight: bold;
-        }
-
-        .price-ticker {
-            background: #1a1a1a;
-            padding: 8px 15px;
-            border-radius: 20px;
-            display: inline-block;
-            margin: 10px 0;
-            font-weight: bold;
-        }
-
-        .contract-status {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 8px;
-            background: #1a1a1a;
-        }
-
-        .contract-status.connected {
-            background: var(--success);
-            color: black;
-        }
-
-        .contract-status.error {
-            background: var(--danger);
-        }
-
-        /* Wallet Connect Modal */
-        .wallet-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .wallet-modal-content {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 12px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        }
-
-        .wallet-option {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 15px;
-            margin: 10px 0;
-            background: var(--input-bg);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .wallet-option:hover {
-            background: #333;
-            transform: scale(1.02);
-        }
-
-        .wallet-icon {
-            width: 30px;
-            height: 30px;
-            margin-right: 15px;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .logo {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 20px;
-            display: block;
-            border-radius: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Zuckabot Pre-Launch Giveaway</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Embedded favicon/logo -->
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...YOUR_BASE64_LOGO_HERE..."/>
+  <style>
+    body { background:#0a0a0a; color:white; font-family:Arial, sans-serif; text-align:center; padding:20px; }
+    img.logo { width:140px; margin:20px auto; display:block; animation:pulse 3s infinite; }
+    h1 { color:#00f0ff; }
+    button { background:#00f0ff; border:none; padding:12px 20px; border-radius:8px;
+             font-size:16px; cursor:pointer; margin:10px; color:#000; font-weight:bold; }
+    button:hover { background:#00c0cc; }
+    #address { margin-top:15px; font-size:14px; color:#0ff; }
+    #notifications { margin-top:20px; font-size:14px; }
+    .error { color:#ff4d4d; }
+    .success { color:#00ff9d; }
+    @keyframes pulse {
+      0% { filter:drop-shadow(0 0 5px #0ff); }
+      50% { filter:drop-shadow(0 0 20px #0ff); }
+      100% { filter:drop-shadow(0 0 5px #0ff); }
+    }
+  </style>
 </head>
 <body>
 
-<div id="notification" class="notification"></div>
+  <!-- Logo -->
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...YOUR_BASE64_LOGO_HERE..." alt="Zuckabot Logo" class="logo">
 
-<!-- Wallet Connection Modal -->
-<div id="walletModal" class="wallet-modal">
-    <div class="wallet-modal-content">
-        <button class="close-modal" onclick="closeWalletModal()">&times;</button>
-        <h3>Connect Wallet</h3>
-        <p>Choose your preferred wallet to connect</p>
-        
-        <div class="wallet-option" onclick="connectMetamask()">
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwMCIgaGVpZ2h0PSIyNDAwIiB2aWV3Qm94PSIwIDAgMjQwMCAyNDAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02NTMuODQ3IDBMNTg1LjgxMiAyNzAuODk2TDM1MC4wMDIgMjcxLjI1M0w0MTguMDM3IDBINjUzLjg0N1oiIGZpbGw9IiNFNzgxMjYiLz48cGF0aCBkPSJNNDE4LjAzNyAwTDM1MC4wMDIgMjcxLjI1M0wyNTcuMjk4IDI3MC44OTZMMTg5LjI2MyAwSDQxOC4wMzdaIiBmaWxsPSIjRjc4QjM5Ii8+PHBhdGggZD0iTTE4OS4yNjMgMEwxMjEuMjI4IDI3MC44OTZMMjUuODc5OSAyNzAuODk2TDAgMEMwIDAgNjMuMjc5OSAwIDE4OS4yNjMgMFoiIGZpbGw9IiNFNzgxMjYiLz48cGF0aCBkPSJNMTg5LjI2MyAwTDI1Ny4yOTggMjcwLjg5NkwyNTcuMjk4IDU0MC4zODlMMTg5LjI2MyA1NDAuMDMyTDE4OS4yNjMgMFoiIGZpbGw9IiNGNzhCMzkiLz48cGF0aCBkPSJNMTg5LjI2MyA1NDAuMDMyTDI1Ny4yOTggNTQwLjM4OUwyNTcuMjk4IDgxMC41MjFMMTg5LjI2MyA4MTAuMTY0TDE4OS4yNjMgNTQwLjAzMloiIGZpbGw9IiNFNzgxMjYiLz48cGF0aCBkPSJNMTg5LjI2MyA4MTAuMTY0TDI1Ny4yOTggODEwLjUyMUwyNTcuMjk4IDEwODAuMjdMMTg5LjI2MyAxMDgwLjI3TDE4OS4yNjMgODEwLjE2NFoiIGZpbGw9IiNGNzhCMzkiLz48cGF0aCBkPSJNMTg5LjI2MyAxMDgwLjI3TDI1cy4yOTggMTA4MC4yN0wyNTcuMjk4IDEzNTAuMDJMMTg5LjI2MyAxMzUwLjAyTDE4OS4yNjMgMTA4MC4yN1oiIGZpbGw9IiNFNzgxMjYiLz48cGF0aCBkPSJNMTg5LjI2MyAxMzUwLjAyTDI1Ny4yOTggMTM1MC4wMkwyNTcuMjk4IDE2MTkuNzdMMTg5LjI2MyAxNjE5Ljc3TDE4OS4yNjMgMTM1MC4wMloiIGZpbGw9IiNGNzhCMzkiLz48cGF0aCBkPSJNMTg5LjI2MyAxNjE5Ljc3TDI1Ny4yOTggMTYxOS43N0wyNTcuMjk4IDE4ODkuNTJMMTg5LjI2MyAxODg5LjUyTDE4OS4yNjMgMTYxOS43N1oiIGZpbGw9IiNFNzgxMjYiLz48cGF0aCBk=" class="wallet-icon" alt="MetaMask">
-            <span>MetaMask</span>
-        </div>
-        
-        <div class="wallet-option" onclick="connectWalletConnect()">
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNHB4IiBoZWlnaHQ9IjEwMjRweCIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMzE2LjIgMzE2LjJhNTEyIDUxMiAwIDEwNzI1LjYgNzI1LjYgNTEyIDUxMiAwIDAwLTcyNS42LTcyNS42eiIgZmlsbD0iIzM5ODRlZiIvPjxwYXRoIGQ9Ik02NjcuOCA1MTJhMTU1LjggMTU1LjggMCAxMDAtMzExLjYgMTU1LjggMTU1LjggMCAwMDAgMzExLjZ6TTM1Ni4yIDUxMmEzMTEuNiAzMTEuNiAwIDEwMC02MjMuMiAzMTEuNiAzMTEuNiAwIDAwMCA2MjMuMnoiIGZpbGw9IiNmZmYiLz48L3N2Zz4=" class="wallet-icon" alt="WalletConnect">
-            <span>WalletConnect</span>
-        </div>
-        
-        <div class="wallet-option" onclick="connectTrustWallet()">
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEwMCAyMDBDNDQuNzcxNSA0LjU3NjI4ZS0wNiA0LjU3NjI4ZS0wNiA0NC43NzE1IDAgMTAwQzAgMTU1LjIyOSA0NC43NzE1IDIwMCAxMDAgMjAwQzE1NS4yMjkgMjAwIDIwMCAxNTUuMjI5IDIwMCAxMDBDMjAwIDQ0Ljc3MTUgMTU1LjIyOSA0LjU3NjI4ZS0wNiAxMDAgNC41NzYyOGUtMDZaIiBmaWxsPSIjMzVCMEU4Ii8+PHBhdGggZD0iTTEzNC4xMzYgNjUuNjQ3N0g2NS44NjM2VjEzNC4zNTJIMTM0LjEzNlY2NS42NDc3Wk04OC4xNDc1IDExOC4xODdINzcuMDk4NFY4MS44MTI3SDg4LjE0NzVWMTE4LjE4N1pNMTA3Ljg1MyAxMTguMTg3SDk2LjgwMDJWODEuODEyN0gxMDcuODUzVjExOC4xODdaTTEyNy41NTggMTE4LjE4N0gxMTYuNTA3VjgxLjgxMjdIMTI3LjU1OFYxMTguMTg3Wk02Ny42MTI2IDc0LjY4MjdIMTI4LjM4N1Y3MS40NTI3SDY3LjYxMjZWNzQuNjgyN1oiIGZpbGw9IndoaXRlIi8+PC9zdmc+" class="wallet-icon" alt="Trust Wallet">
-            <span>Trust Wallet</span>
-        </div>
-        
-        <p>Don't have a wallet? <a href="https://metamask.io/download.html" target="_blank" style="color: var(--primary);">Install MetaMask</a></p>
-    </div>
-</div>
+  <h1>Zuckabot Pre-Launch Giveaway</h1>
+  <p>Claim your free Zuckabot tokens. Powered by BSC.</p>
 
-<!-- Logo -->
-<img src="data:image/png;base64,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" class="logo" alt="Zuckabot Logo">
+  <button id="connectBtn">Connect Wallet</button>
+  <button id="disconnectBtn">Disconnect</button>
+  <button id="addTokenBtn">Add ZUCKA to Wallet</button>
+  <button id="initiateBtn">Initiate Claim</button>
+  <button id="finalizeBtn">Finalize Claim</button>
 
-<h1>Zuckabot</h1>
-<h3>LIMITED TIME: 150M ZUCKA Pre-Launch Giveaway</h3>
-<p>Projected PancakeSwap Launch Price: $0.05 per ZUCKA</p>
+  <div id="address"></div>
+  <div id="notifications"></div>
 
-<div class="card">
-    <h3>Connect Wallet</h3>
-    <button id="connectWalletBtn" class="connect-button" onclick="openWalletModal()">Connect Wallet</button>
-    <p id="walletInfo" style="display: none; word-break: break-all; margin-top: 10px;"></p>
-    <div id="contractStatus" class="contract-status">Contracts: Not Connected</div>
-    <p>💡 Tip: Best experience in Trust Wallet / MetaMask app browser.</p>
-</div>
+  <!-- ethers.js -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script>
+    let provider, signer;
+    const distributorCA = "0xec222Dba73C17877773E411D15904bf205FbA149";
+    const zuckaCA = "0x54bff3901d7d27ffe21b9a23bc8efb48c9847048";
+    const zuckaSymbol = "ZUCKA";
+    const zuckaDecimals = 18;
 
-<button class="primary-btn" onclick="addTokenToWallet()">Add ZUCKA to Wallet</button>
-
-<div class="card">
-    <h3>✅ Complete Social Tasks</h3>
-    <p>Help Zuckabot go viral: join, follow, share, then paste proof links.</p>
-
-    <div class="task">
-        <span class="task-status">Telegram <span class="status-badge status-pending" id="telegramStatus">Pending</span></span>
-        <button class="task-button" onclick="openLink('https://t.me/zuckabotofficial/1')">Join Telegram</button>
-        <input id="telegramProof" placeholder="Paste proof link">
-        <button class="verify-button" onclick="verifyTask('telegram')">Verify</button>
-        <span class="checkmark" id="checkTelegram">✅</span>
-    </div>
-
-    <div class="task">
-        <span class="task-status">X (Twitter) <span class="status-badge status-pending" id="xStatus">Pending</span></span>
-        <button class="task-button" onclick="openLink('https://x.com/zuckabottoken')">Follow on X</button>
-        <input id="xProof" placeholder="Paste proof link">
-        <button class="verify-button" onclick="verifyTask('x')">Verify</button>
-        <span class="checkmark" id="checkX">✅</span>
-    </div>
-
-    <div class="task">
-        <span class="task-status">Facebook <span class="status-badge status-pending" id="facebookStatus">Pending</span></span>
-        <button class="task-button" onclick="openLink('https://web.facebook.com/profile.php?id=61579580776149')">Like Facebook</button>
-        <input id="facebookProof" placeholder="Paste proof link">
-        <button class="verify-button" onclick="verifyTask('facebook')">Verify</button>
-        <span class="checkmark" id="checkFB">✅</span>
-    </div>
-
-    <p>Status updates: 🔴 Pending → 🟡 Submitted → 🟢 Verified (auto after 10 min). No data uploaded; stored locally only.</p>
-</div>
-
-<div class="card">
-    <h3>Claim Your ZUCKA</h3>
-    <p>2-step: initiate claim, then finalize after verification (~10 minutes). Small on-chain fee (~$0.25 BNB).</p>
-    <p>Claim Fee: <span id="claimFeeBNB">Loading...</span> BNB</p>
-    <button id="claimBtn" class="primary-btn" disabled onclick="initiateClaim()">Initiate Claim</button>
-    <button id="finalizeBtn" class="secondary-btn" disabled onclick="finalizeClaim()">Finalize</button>
-    <p id="claimStatus">Status: Not started</p>
-    <p id="claimTimer">Time remaining: --:--</p>
-    <p>Your claim amount: <strong>1,500 ZUCKA</strong> ≈ $75 at launch price</p>
-</div>
-
-<div class="card">
-    <h3>Donation Calculator</h3>
-    <div class="price-ticker">
-        <span>Current BNB Price: $</span>
-        <span id="bnbPrice">Loading...</span>
-        <span id="priceSource"></span>
-    </div>
-    
-    <div class="donation-grid">
-        <div class="donation-option" data-amount="1">$1</div>
-        <div class="donation-option" data-amount="2">$2</div>
-        <div class="donation-option" data-amount="5">$5</div>
-        <div class="donation-option" data-amount="10">$10</div>
-        <div class="donation-option" data-amount="20">$20</div>
-        <div class="donation-option" data-amount="30">$30</div>
-        <div class="donation-option" data-amount="50">$50</div>
-        <div class="donation-option" data-amount="100">$100</div>
-    </div>
-    
-    <p>Or enter custom amount:</p>
-    <input type="number" id="donationUSD" placeholder="$ USD" oninput="updateDonation()">
-    
-    <div class="donation-tier">
-        <p>Donate: <span id="donationBNB">0</span> BNB</p>
-        <p>Receive: <span id="donationZUCKA">0</span> ZUCKA</p>
-        <p>Bonus: <span id="donationBonus">0</span> ZUCKA (<span id="bonusPercent">0%</span>)</p>
-        <p>Total: <span id="donationTotal">0</span> ZUCKA</p>
-    </div>
-    
-    <button class="primary-btn" onclick="processDonation()">Donate Now</button>
-</div>
-
-<div class="card">
-    <p>Claimed ZUCKA: <span id="claimedAmount">0</span> / 150,000,000</p>
-    <p>Unique Claim Wallets: <span id="uniqueWallets">0</span></p>
-    <p>Total Donations (BNB): <span id="totalDonations">0</span> BNB</p>
-    <div id="countdown">Loading countdown...</div>
-    <div class="progress-container">
-        <div class="progress-bar" id="progressBar"></div>
-    </div>
-</div>
-
-<div class="card">
-    <h3>About Zuckabot</h3>
-    <p>Zuckabot is a community-first token. Vision: democratize memecoin participation with a transparent treasury and distributor.</p>
-
-    <h3>FAQ</h3>
-    <details>
-        <summary>How to claim?</summary>
-        <p>Submit social links → Connect wallet → Initiate → Wait ~10 minutes → Finalize (~$0.25 BNB).</p>
-    </details>
-    <details>
-        <summary>Why is there a fee?</summary>
-        <p>Covers gas + LP seed. Fixed on-chain. The fee also helps prevent bots and fraudulent claims, ensuring fair distribution to real community members.</p>
-    </details>
-    <details>
-        <summary>When does trading begin?</summary>
-        <p>After giveaway completion and LP injection. Estimated initial price: $0.05/ZUCKA.</p>
-    </details>
-    <details>
-        <summary>How to add token to wallet?</summary>
-        <p>Use "Add ZUCKA" button above.</p>
-    </details>
-</div>
-
-<div class="card">
-    <h3>Contract Addresses</h3>
-    <div class="address">
-        <span>Token: 0x54bff3901d7d27ffe21b9a23bc8efb48c9847048</span>
-        <button class="copy-btn" onclick="copyToClipboard('0x54bff3901d7d27ffe21b9a23bc8efb48c9847048')">Copy</button>
-    </div>
-    <div class="address">
-        <span>Distributor: 0xec222Dba73C17877773E411D15904bf205FbA149</span>
-        <button class="copy-btn" onclick="copyToClipboard('0xec222Dba73C17877773E411D15904bf205FbA149')">Copy</button>
-    </div>
-    <div class="address">
-        <span>Treasury: 0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91</span>
-        <button class="copy-btn" onclick="copyToClipboard('0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91')">Copy</button>
-    </div>
-    
-    <p>Tip: Use your wallet's in-app browser (Trust Wallet / MetaMask) for easiest connection on mobile.</p>
-    <p>
-        <button class="secondary-btn" onclick="openLink('https://t.me/zuckabotofficial/1')">Join Telegram</button>
-        <button class="secondary-btn" onclick="openLink('https://x.com/zuckabottoken')">Follow on X</button>
-        <button class="secondary-btn" onclick="openLink('https://web.facebook.com/profile.php?id=61579580776149')">Like on Facebook</button>
-    </p>
-</div>
-
-<footer class="card">
-    <p>©2025 Zuckabot • Token: 0x54bff3901d7d27ffe21b9a23bc8efb48c9847048 • Distributor: 0xec222Dba73C17877773E411D15904bf205FbA149 • Treasury: 0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91</p>
-</footer>
-
-<script>
-    // Zuckabot Distributor v5 - Fixed Implementation
-    let walletConnected = false;
-    let userAddress = '';
-    let claimInitiated = false;
-    let claimTimer = null;
-    let tasksVerified = {
-        telegram: {verified: false, timestamp: 0}, 
-        x: {verified: false, timestamp: 0}, 
-        facebook: {verified: false, timestamp: 0}
-    };
-    let bnbPrice = 0;
-    let selectedDonationAmount = 0;
-    let claimFeeWei = 0;
-
-    // Contract addresses
-    const ZUCKABOT_TOKEN_ADDRESS = '0x54bff3901d7d27ffe21b9a23bc8efb48c9847048';
-    const ZUCKABOT_DISTRIBUTOR_ADDRESS = '0xec222Dba73C17877773E411D15904bf205FbA149';
-    const ZUCKABOT_TREASURY_ADDRESS = '0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91';
-
-    // Wallet connection modal functions
-    function openWalletModal() {
-        document.getElementById('walletModal').style.display = 'flex';
+    function notify(msg, type="") {
+      document.getElementById("notifications").innerHTML =
+        `<span class="${type}">${msg}</span>`;
     }
 
-    function closeWalletModal() {
-        document.getElementById('walletModal').style.display = 'none';
-    }
-
-    // Initialize from localStorage
-    function initializeApp() {
-        // Load saved data if exists
-        const savedData = localStorage.getItem('zuckabotData');
-        if (savedData) {
-            const data = JSON.parse(savedData);
-            
-            // Restore task status
-            if (data.tasks) {
-                for (const task in data.tasks) {
-                    if (data.tasks[task].verified) {
-                        tasksVerified[task] = data.tasks[task];
-                        document.getElementById(`${task}Proof`).value = 'Previously verified';
-                        document.getElementById(`check${task.charAt(0).toUpperCase() + task.slice(1)}`).style.display = 'inline';
-                        updateTaskStatus(task, 'verified');
-                    }
-                }
-            }
-            
-            // Restore claim status
-            if (data.claimInitiated) {
-                claimInitiated = true;
-                document.getElementById('claimBtn').disabled = true;
-                document.getElementById('finalizeBtn').disabled = false;
-                document.getElementById('claimStatus').textContent = 'Status: Waiting for verification (10 min)';
-                
-                // If we have a timestamp, calculate remaining time
-                if (data.claimTimestamp) {
-                    const elapsed = Date.now() - data.claimTimestamp;
-                    const remaining = Math.max(0, 600000 - elapsed); // 10 minutes in ms
-                    
-                    if (remaining > 0) {
-                        // Set timer to enable finalize button
-                        claimTimer = setTimeout(() => {
-                            document.getElementById('claimStatus').textContent = 'Status: Ready to finalize';
-                            showNotification('Your claim is now ready to finalize!', 'success');
-                        }, remaining);
-                    } else {
-                        document.getElementById('claimStatus').textContent = 'Status: Ready to finalize';
-                    }
-                }
-            }
-            
-            // Update stats
-            if (data.claimed) {
-                claimed = data.claimed;
-                updateStats();
-            }
+    async function connectWallet() {
+      if (!window.ethereum) {
+        notify("No Web3 wallet found. Please open in MetaMask or Trust Wallet.", "error");
+        return;
+      }
+      try {
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const network = await provider.getNetwork();
+        if (network.chainId !== 56) {
+          notify("Wrong network. Please switch to BSC Mainnet.", "error");
+          return;
         }
-        
-        // Set up donation option click handlers
-        document.querySelectorAll('.donation-option').forEach(option => {
-            option.addEventListener('click', function() {
-                document.querySelectorAll('.donation-option').forEach(el => el.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedDonationAmount = parseInt(this.getAttribute('data-amount'));
-                document.getElementById('donationUSD').value = selectedDonationAmount;
-                updateDonation();
-            });
+        signer = provider.getSigner();
+        const address = await signer.getAddress();
+        document.getElementById("address").innerText = "Connected: " + address;
+        document.getElementById("connectBtn").innerText = "Connected ✅";
+        notify("Wallet connected", "success");
+      } catch (err) {
+        console.error(err);
+        notify("Connection failed: " + err.message, "error");
+      }
+    }
+
+    function disconnectWallet() {
+      signer = null;
+      provider = null;
+      document.getElementById("address").innerText = "";
+      document.getElementById("connectBtn").innerText = "Connect Wallet";
+      notify("Disconnected", "error");
+    }
+
+    async function addToken() {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_watchAsset',
+          params: {
+            type: 'ERC20',
+            options: {
+              address: zuckaCA,
+              symbol: zuckaSymbol,
+              decimals: zuckaDecimals,
+            },
+          },
         });
-        
-        // Fetch current BNB price from multiple sources
-        fetchBNBPrice();
-        
-        updateClaimButton();
-        updateCountdown();
-        
-        // Set initial claim fee
-        document.getElementById('claimFeeBNB').textContent = '0.001';
+        notify("ZUCKA token added to wallet", "success");
+      } catch (err) {
+        console.error(err);
+        notify("Failed to add token", "error");
+      }
     }
-
-    // Show notification
-    function showNotification(message, type = 'success') {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.className = `notification ${type}`;
-        
-        setTimeout(() => {
-            notification.className = 'notification';
-        }, 3000);
-    }
-
-    // Copy to clipboard
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            showNotification('Copied to clipboard!');
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-            // Fallback for older browsers
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textArea);
-            showNotification('Copied to clipboard!');
-        });
-    }
-
-    // Open external links
-    function openLink(url) {
-        window.open(url, '_blank');
-    }
-
-    // Connect with a provider (generic function)
-    async function connectWithProvider(provider) {
-        try {
-            // Request accounts
-            const accounts = await provider.request({method: 'eth_requestAccounts'});
-            userAddress = accounts[0];
-            walletConnected = true;
-            
-            // Display truncated wallet address
-            const truncatedAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-            document.getElementById('walletInfo').textContent = `Connected: ${truncatedAddress}`;
-            document.getElementById('walletInfo').style.display = 'block';
-            
-            showNotification("Wallet connected successfully!");
-            closeWalletModal();
-            
-            // Update contract status
-            document.getElementById('contractStatus').textContent = 'Contracts: Connected';
-            document.getElementById('contractStatus').className = 'contract-status connected';
-            
-            updateClaimButton();
-            
-            // Listen for account changes (for MetaMask)
-            if (provider.on) {
-                provider.on('accountsChanged', async (accounts) => {
-                    if (accounts.length === 0) {
-                        // User disconnected their wallet
-                        walletConnected = false;
-                        userAddress = '';
-                        document.getElementById('walletInfo').style.display = 'none';
-                        showNotification('Wallet disconnected', 'error');
-                    } else {
-                        // User switched accounts
-                        userAddress = accounts[0];
-                        const truncatedAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-                        document.getElementById('walletInfo').textContent = `Connected: ${truncatedAddress}`;
-                        showNotification('Wallet account changed');
-                    }
-                    updateClaimButton();
-                });
-            }
-        } catch (err) { 
-            console.error(err); 
-            showNotification("Connection failed. Please try again.", 'error');
-        }
-    }
-
-    // MetaMask connection
-    async function connectMetamask() {
-        if (typeof window.ethereum !== 'undefined') {
-            await connectWithProvider(window.ethereum);
-        } else {
-            showNotification("Please install MetaMask to connect.", 'error');
-            window.open('https://metamask.io/download.html', '_blank');
-        }
-    }
-
-    // WalletConnect connection
-    async function connectWalletConnect() {
-        showNotification("WalletConnect QR code would appear here. This is a simulation.", 'success');
-        closeWalletModal();
-        
-        // Simulate connection after a delay
-        setTimeout(() => {
-            userAddress = '0x742d35Cc6634C893292Ce8bB6239C002Ad8e6b59';
-            walletConnected = true;
-            
-            const truncatedAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-            document.getElementById('walletInfo').textContent = `Connected: ${truncatedAddress}`;
-            document.getElementById('walletInfo').style.display = 'block';
-            
-            document.getElementById('contractStatus').textContent = 'Contracts: Connected';
-            document.getElementById('contractStatus').className = 'contract-status connected';
-            
-            showNotification("Wallet connected via WalletConnect!");
-            updateClaimButton();
-        }, 2000);
-    }
-
-    // Trust Wallet connection (uses WalletConnect)
-    async function connectTrustWallet() {
-        await connectWalletConnect();
-    }
-
-    // Add token to wallet
-    async function addTokenToWallet() {
-        if (typeof window.ethereum === 'undefined') {
-            showNotification("Please use a Web3 wallet like MetaMask or Trust Wallet", 'error');
-            return;
-        }
-        
-        try {
-            const wasAdded = await window.ethereum.request({
-                method: 'wallet_watchAsset',
-                params: {
-                    type: 'ERC20',
-                    options: {
-                        address: ZUCKABOT_TOKEN_ADDRESS,
-                        symbol: 'ZUCKA',
-                        decimals: 18,
-                        image: 'https://zuckabot.com/icon.png',
-                    },
-                },
-            });
-            
-            if (wasAdded) {
-                showNotification('ZUCKA token added to your wallet!');
-            } else {
-                showNotification('Token was not added.', 'error');
-            }
-        } catch (error) {
-            console.error(error);
-            showNotification('Failed to add token.', 'error');
-        }
-    }
-
-    // Task verification
-    function verifyTask(task){
-        const input = document.getElementById(task + 'Proof');
-        const proofLink = input.value.trim();
-        
-        if (!proofLink) {
-            showNotification("Please paste a proof link first!", 'error');
-            return;
-        }
-        
-        // Simple validation for URL format
-        try {
-            new URL(proofLink);
-        } catch (e) {
-            showNotification("Please enter a valid URL", 'error');
-            return;
-        }
-        
-        // Update task status
-        tasksVerified[task] = {
-            verified: true,
-            timestamp: Date.now()
-        };
-        
-        document.getElementById('check' + task.charAt(0).toUpperCase() + task.slice(1)).style.display = 'inline';
-        updateTaskStatus(task, 'submitted');
-        
-        showNotification(`Task submitted! It will be verified shortly.`);
-        
-        // Simulate verification delay (10 minutes)
-        setTimeout(() => {
-            updateTaskStatus(task, 'verified');
-            showNotification(`${task} task verified successfully!`, 'success');
-            updateClaimButton();
-            saveToLocalStorage();
-        }, 600000); // 10 minutes
-        
-        updateClaimButton();
-        saveToLocalStorage();
-    }
-
-    function updateTaskStatus(task, status) {
-        const statusElement = document.getElementById(`${task}Status`);
-        statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-        statusElement.className = `status-badge status-${status}`;
-    }
-
-    function allTasksVerified() {
-        return Object.values(tasksVerified).every(task => task.verified);
-    }
-
-    function updateClaimButton() {
-        document.getElementById('claimBtn').disabled = !(allTasksVerified() && walletConnected && !claimInitiated);
-    }
-
-    // Claim flow
-    let claimed = 0;
-    let uniqueWallets = 0;
-    let totalDonations = 0;
 
     async function initiateClaim() {
-        if (!walletConnected) {
-            showNotification("Please connect your wallet first", 'error');
-            return;
-        }
-        
-        if (!allTasksVerified()) {
-            showNotification("Please complete all tasks first", 'error');
-            return;
-        }
-        
-        try {
-            // Simulate blockchain transaction
-            showNotification("Claim initiated! Waiting for confirmation...");
-            
-            // Simulate transaction delay
-            setTimeout(() => {
-                claimInitiated = true;
-                document.getElementById('claimBtn').disabled = true;
-                document.getElementById('finalizeBtn').disabled = false;
-                document.getElementById('claimStatus').textContent = 'Status: Verifying (10 min required)';
-                
-                showNotification("Claim initiated successfully! Please wait 10 minutes before finalizing.");
-                
-                // Start countdown
-                startClaimCountdown(Math.floor(Date.now() / 1000));
-                
-                saveToLocalStorage();
-            }, 2000);
-            
-        } catch (error) {
-            console.error('Failed to initiate claim:', error);
-            showNotification('Failed to initiate claim. Please try again.', 'error');
-        }
+      if (!signer) return notify("Connect wallet first", "error");
+      try {
+        const distributor = new ethers.Contract(distributorCA, [
+          "function initiateClaim() external"
+        ], signer);
+        const tx = await distributor.initiateClaim();
+        notify("Claim initiated. Tx: " + tx.hash, "success");
+      } catch (err) {
+        console.error(err);
+        notify("Initiate failed: " + err.message, "error");
+      }
     }
 
     async function finalizeClaim() {
-        try {
-            showNotification("Finalizing claim...");
-            
-            // Simulate transaction delay
-            setTimeout(() => {
-                document.getElementById('claimStatus').textContent = 'Status: Claim completed!';
-                document.getElementById('finalizeBtn').disabled = true;
-                showNotification("Claim finalized! 1500 ZUCKA sent to your wallet.", 'success');
-                
-                // Update stats
-                claimed += 1500;
-                uniqueWallets += 1;
-                totalDonations += 0.001; // Simulated BNB fee
-                updateStats();
-                
-                saveToLocalStorage();
-            }, 2000);
-            
-        } catch (error) {
-            console.error('Failed to finalize claim:', error);
-            showNotification('Failed to finalize claim. Please try again.', 'error');
-        }
+      if (!signer) return notify("Connect wallet first", "error");
+      try {
+        const distributor = new ethers.Contract(distributorCA, [
+          "function finalizeClaim() external payable",
+          "function requiredClaimWei() external view returns (uint256)"
+        ], signer);
+        const fee = await distributor.requiredClaimWei();
+        const tx = await distributor.finalizeClaim({ value: fee });
+        notify("Finalize submitted. Tx: " + tx.hash, "success");
+      } catch (err) {
+        console.error(err);
+        notify("Finalize failed: " + err.message, "error");
+      }
     }
 
-    // Start countdown for claim finalization
-    function startClaimCountdown(pendingTimestamp) {
-        const checkCountdown = () => {
-            const now = Math.floor(Date.now() / 1000);
-            const elapsed = now - pendingTimestamp;
-            const remaining = Math.max(0, 600 - elapsed); // 10 minutes in seconds
-            
-            if (remaining > 0) {
-                const minutes = Math.floor(remaining / 60);
-                const seconds = remaining % 60;
-                document.getElementById('claimTimer').textContent = `Time remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-            } else {
-                document.getElementById('claimTimer').textContent = 'Ready to finalize!';
-                document.getElementById('finalizeBtn').disabled = false;
-                clearInterval(countdownInterval);
-            }
-        };
-        
-        // Check immediately and then every second
-        checkCountdown();
-        const countdownInterval = setInterval(checkCountdown, 1000);
-    }
-
-    // Fetch current BNB price from multiple sources with fallbacks
-    async function fetchBNBPrice() {
-        const sources = [
-            {
-                name: 'Binance',
-                url: 'https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT',
-                parser: data => parseFloat(data.price)
-            },
-            {
-                name: 'CoinGecko',
-                url: 'https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd',
-                parser: data => data.binancecoin.usd
-            }
-        ];
-        
-        // Try each source until we get a price
-        for (const source of sources) {
-            try {
-                const response = await fetch(source.url);
-                if (!response.ok) continue;
-                
-                const data = await response.json();
-                bnbPrice = source.parser(data);
-                
-                if (bnbPrice && bnbPrice > 0) {
-                    document.getElementById('bnbPrice').textContent = bnbPrice.toFixed(2);
-                    document.getElementById('priceSource').textContent = `via ${source.name}`;
-                    updateDonation();
-                    return;
-                }
-            } catch (error) {
-                console.error(`Failed to fetch BNB price from ${source.name}:`, error);
-                continue;
-            }
-        }
-        
-        // Fallback if all sources fail
-        bnbPrice = 840; // Current approximate price as fallback
-        document.getElementById('bnbPrice').textContent = '840.00 (estimated)';
-        document.getElementById('priceSource').textContent = 'estimated';
-        updateDonation();
-    }
-
-    // Donation calculator with bonus system
-    function updateDonation() {
-        const usdInput = document.getElementById('donationUSD');
-        let usd = parseFloat(usdInput.value) || 0;
-        
-        // Update selected amount if it matches a preset option
-        document.querySelectorAll('.donation-option').forEach(option => {
-            const optionAmount = parseInt(option.getAttribute('data-amount'));
-            option.classList.toggle('selected', optionAmount === usd);
-        });
-        
-        if (bnbPrice > 0) {
-            const bnbAmount = usd / bnbPrice;
-            document.getElementById('donationBNB').textContent = bnbAmount.toFixed(6);
-            
-            // Calculate ZUCKA amount (base rate: $1 = 2000 ZUCKA)
-            const baseZucka = usd * 2000;
-            
-            // Calculate bonus based on donation amount
-            let bonusPercent = 0;
-            if (usd >= 10 && usd < 20) bonusPercent = 10;
-            else if (usd >= 20 && usd < 30) bonusPercent = 20;
-            else if (usd >= 30 && usd < 50) bonusPercent = 30;
-            else if (usd >= 50) bonusPercent = 50;
-            
-            const bonusZucka = Math.floor(baseZucka * (bonusPercent / 100));
-            const totalZucka = baseZucka + bonusZucka;
-            
-            document.getElementById('donationZUCKA').textContent = baseZucka.toLocaleString();
-            document.getElementById('donationBonus').textContent = bonusZucka.toLocaleString();
-            document.getElementById('bonusPercent').textContent = `${bonusPercent}%`;
-            document.getElementById('donationTotal').textContent = totalZucka.toLocaleString();
-        } else {
-            document.getElementById('donationBNB').textContent = '0';
-            document.getElementById('donationZUCKA').textContent = '0';
-            document.getElementById('donationBonus').textContent = '0';
-            document.getElementById('bonusPercent').textContent = '0%';
-            document.getElementById('donationTotal').textContent = '0';
-        }
-    }
-
-    async function processDonation() {
-        const usdInput = document.getElementById('donationUSD');
-        const usd = parseFloat(usdInput.value) || 0;
-        
-        if (usd <= 0) {
-            showNotification("Please enter a donation amount first", 'error');
-            return;
-        }
-        
-        if (!walletConnected) {
-            showNotification("Please connect your wallet first", 'error');
-            return;
-        }
-        
-        try {
-            showNotification("Processing donation...");
-            
-            // Simulate transaction delay
-            setTimeout(() => {
-                // Calculate ZUCKA amount with bonus
-                const baseZucka = usd * 2000;
-                let bonusPercent = 0;
-                if (usd >= 10 && usd < 20) bonusPercent = 10;
-                else if (usd >= 20 && usd < 30) bonusPercent = 20;
-                else if (usd >= 30 && usd < 50) bonusPercent = 30;
-                else if (usd >= 50) bonusPercent = 50;
-                
-                const bonusZucka = Math.floor(baseZucka * (bonusPercent / 100));
-                const totalZucka = baseZucka + bonusZucka;
-                
-                showNotification(`Thank you for your donation of $${usd}! You received ${totalZucka.toLocaleString()} ZUCKA.`, 'success');
-                
-                // Update stats
-                totalDonations += usd / bnbPrice;
-                claimed += totalZucka;
-                updateStats();
-                
-                // Reset donation form
-                usdInput.value = '';
-                document.querySelectorAll('.donation-option').forEach(el => el.classList.remove('selected'));
-                updateDonation();
-                saveToLocalStorage();
-            }, 2000);
-        } catch (error) {
-            console.error('Failed to process donation:', error);
-            showNotification('Failed to process donation. Please try again.', 'error');
-        }
-    }
-
-    // Stats & countdown
-    function updateStats() {
-        document.getElementById('claimedAmount').innerText = claimed.toLocaleString();
-        document.getElementById('uniqueWallets').innerText = uniqueWallets.toLocaleString();
-        document.getElementById('totalDonations').innerText = totalDonations.toFixed(4);
-        
-        let percent = (claimed / 150000000) * 100;
-        document.getElementById('progressBar').style.width = percent + '%';
-    }
-
-    const endDate = new Date("2025-09-30T23:59:59").getTime();
-    function updateCountdown() {
-        const now = new Date().getTime();
-        const dist = endDate - now;
-        
-        if (dist < 0) {
-            document.getElementById('countdown').innerText = 'Event Ended';
-            // Disable all actions if event has ended
-            document.getElementById('claimBtn').disabled = true;
-            document.getElementById('finalizeBtn').disabled = true;
-            return;
-        }
-        
-        let days = Math.floor(dist / (1000 * 60 * 60 * 24));
-        let hours = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        let minutes = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
-        let seconds = Math.floor((dist % (1000 * 60)) / 1000);
-        
-        document.getElementById('countdown').innerHTML = `
-            <strong>Ends in:</strong> ${days}d ${hours}h ${minutes}m ${seconds}s
-        `;
-    }
-
-    // Local storage functions
-    function saveToLocalStorage() {
-        const data = {
-            tasks: tasksVerified,
-            claimInitiated: claimInitiated,
-            claimTimestamp: claimInitiated ? Date.now() : null,
-            claimed: claimed,
-            uniqueWallets: uniqueWallets,
-            totalDonations: totalDonations
-        };
-        
-        localStorage.setItem('zuckabotData', JSON.stringify(data));
-    }
-
-    // Initialize the application
-    initializeApp();
-    setInterval(updateCountdown, 1000);
-    // Refresh BNB price every minute
-    setInterval(fetchBNBPrice, 60000);
-</script>
+    document.getElementById("connectBtn").onclick = connectWallet;
+    document.getElementById("disconnectBtn").onclick = disconnectWallet;
+    document.getElementById("addTokenBtn").onclick = addToken;
+    document.getElementById("initiateBtn").onclick = initiateClaim;
+    document.getElementById("finalizeBtn").onclick = finalizeClaim;
+  </script>
 </body>
 </html>
