@@ -1,142 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zuckabot Claim Portal</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.umd.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zuckabot Giveaway</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; color: #222; margin:0; padding:0; }
-    header { background:#111; color:#fff; padding:1rem; text-align:center; }
-    main { max-width:600px; margin:2rem auto; background:#fff; padding:2rem; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.1); }
-    button { background:#0066ff; color:#fff; border:none; padding:0.75rem 1.5rem; border-radius:8px; margin:0.5rem 0; cursor:pointer; font-size:1rem; }
-    button:hover { background:#004ccc; }
-    .address-box { background:#eee; padding:0.5rem; border-radius:6px; font-family:monospace; display:flex; justify-content:space-between; align-items:center; }
-    .copy-btn { background:#ccc; color:#111; border:none; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; }
-    .faq-item { margin-bottom:1rem; }
-    .faq-q { font-weight:bold; cursor:pointer; }
-    .faq-a { display:none; padding:0.5rem; background:#f9f9f9; border-radius:6px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #0d0d0d;
+      color: #00eaff;
+      text-align: center;
+      padding: 30px;
+    }
+    img.logo {
+      width: 100px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 2em;
+    }
+    button {
+      display: block;
+      margin: 10px auto;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #00eaff;
+      color: #000;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #00bcd4;
+    }
+    #status {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    #error {
+      color: red;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Zuckabot Claim Portal</h1>
-  </header>
-  <main>
-    <button onclick="connectWallet()">🔗 Connect Wallet</button>
-    <div id="walletInfo"></div>
+  <!-- Logo (Base64 embedded, never breaks) -->
+  <img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAYAAADaw0z6AAAABHNCSVQICAgIfAhkiAAABEBJREFUeJzt3cFtwjAURVFR+6+5pA6pA1lK4FztC7+oa3wfjJj8nNJ8AxgcAgAAAAAAAAAAAAAAAIByCN2Zv7Y6nQ6/VtO+u4CbpP+XLMvJ67cP/R/PVSt+6plfPx+fT4Kp+fQj1N5D/Z4Pn1CceRbKrvAf0cYc82dnwz4aLxY6lOH6t5+3o/1n+/eP1DXW+/nL6nHtVd1vr+V/tKq1hVV6rjPd/wE7W3umHpuTSdCjcfzuqVbUZh0z1VXUrvuI9G8o93akrxr6PUSdtm1FZ0T+7xLpjvaUp2M91+u9dvOvZHn89ijXsm6fj+ozV3Ttnvc+sbHn/mSrrp1z9vnU5pDd3sm4vr5r2pmZKp2rfk3JZpUXur28tdcKqFvPUnZKfHq4O/WrKdv4+lYybbm4UqX+FmbRtP7Vnv/Y9nz9f4tFzkvzL/7u1s1hMbE9m6XYXzW3qQ/W95aC5bfVTcbtGfH81Z+7m1ZcHszK9F+Lx+6NVj9N9T2jX2Q7Pt7Hr9vfvVp+mU94fK1uxt2/aWq2lpy7EoMAAAAAAAAAAAAAACgFb8APYxZCtUrbV8AAAAASUVORK5CYII=" alt="Zuckabot Logo">
 
-    <h2>Claim Process</h2>
-    <button onclick="initiateClaim()">🚀 Initiate Claim</button>
-    <button onclick="finalizeClaim()">✅ Finalize Claim</button>
+  <h1>Zuckabot Pre-Launch Giveaway</h1>
+  <p>Claim your free Zuckabot tokens.<br>Powered by BSC.</p>
 
-    <h2>Your Balance</h2>
-    <div id="balanceBox">Connect wallet to see balance.</div>
+  <button id="connectButton">Connect Wallet</button>
+  <button id="disconnectButton" style="display:none;">Disconnect</button>
+  <button id="addTokenButton" style="display:none;">Add ZUCKA to Wallet</button>
+  <button id="initiateClaim" style="display:none;">Initiate Claim</button>
+  <button id="finalizeClaim" style="display:none;">Finalize Claim</button>
 
-    <h2>Contracts</h2>
-    <div class="address-box">Token: 0x54bff3901d7d27ffe21b9a23bc8efb48c9847048 
-      <button class="copy-btn" onclick="copyAddress('0x54bff3901d7d27ffe21b9a23bc8efb48c9847048')">Copy</button>
-    </div>
-    <div class="address-box">Distributor: 0xec222Dba73C17877773E411D15904bf205FbA149 
-      <button class="copy-btn" onclick="copyAddress('0xec222Dba73C17877773E411D15904bf205FbA149')">Copy</button>
-    </div>
-    <div class="address-box">Treasury: 0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91 
-      <button class="copy-btn" onclick="copyAddress('0x42e8D84Ff8ff8e5EaE8E2648Ebfa772ee4515c91')">Copy</button>
-    </div>
+  <div id="status">Not Connected</div>
+  <div id="error"></div>
 
-    <h2>FAQ</h2>
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Why is there a $0.25 claim fee?</div>
-      <div class="faq-a">To prevent bot abuse and cover gas + liquidity setup. It is dynamically calculated in BNB at live price.</div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Can I claim twice?</div>
-      <div class="faq-a">No, each unique wallet can only claim once. Duplicate claims are blocked on-chain.</div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">When will Zuckabot launch?</div>
-      <div class="faq-a">Target listing at $0.05 per token on PancakeSwap after distribution ends.</div>
-    </div>
-  </main>
-
+  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
   <script>
-    const tokenCA = "0x54bff3901d7d27ffe21b9a23bc8efb48c9847048";
     const distributorCA = "0xec222Dba73C17877773E411D15904bf205FbA149";
+    const distributorABI = [{"inputs":[],"name":"initiateClaim","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"finalizeClaim","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"requiredClaimWei","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+    const zuckabotCA = "0x54bff3901d7d27ffe21b9a23bc8efb48c9847048";
 
-    const tokenABI = [...]; // paste your full token ABI here
-    const distributorABI = [...]; // paste your full distributor ABI here
-
-    let provider, signer, distributorContract, tokenContract, userAddress;
+    let provider, signer, distributor;
 
     async function connectWallet() {
       try {
         if (!window.ethereum) {
-          alert("Please install MetaMask or use a Web3 wallet.");
+          alert("MetaMask or Web3 wallet required!");
           return;
         }
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
-        userAddress = await signer.getAddress();
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
 
-        tokenContract = new ethers.Contract(tokenCA, tokenABI, signer);
-        distributorContract = new ethers.Contract(distributorCA, distributorABI, signer);
+        // Check network
+        const network = await provider.getNetwork();
+        if (network.chainId !== 56) {
+          alert("Switch to BNB Smart Chain Mainnet!");
+          return;
+        }
 
-        document.getElementById("walletInfo").innerText = "Connected: " + userAddress;
-        loadBalance();
+        distributor = new ethers.Contract(distributorCA, distributorABI, signer);
+
+        document.getElementById("connectButton").style.display = "none";
+        document.getElementById("disconnectButton").style.display = "block";
+        document.getElementById("addTokenButton").style.display = "block";
+        document.getElementById("initiateClaim").style.display = "block";
+        document.getElementById("finalizeClaim").style.display = "block";
+        document.getElementById("status").innerText = "Connected ✅ " + await signer.getAddress();
       } catch (err) {
-        console.error("connectWallet error:", err);
-        alert("Wallet connection failed.");
+        document.getElementById("error").innerText = "Connect failed: " + err.message;
       }
     }
 
-    async function loadBalance() {
+    function disconnectWallet() {
+      provider = null;
+      signer = null;
+      distributor = null;
+      document.getElementById("connectButton").style.display = "block";
+      document.getElementById("disconnectButton").style.display = "none";
+      document.getElementById("addTokenButton").style.display = "none";
+      document.getElementById("initiateClaim").style.display = "none";
+      document.getElementById("finalizeClaim").style.display = "none";
+      document.getElementById("status").innerText = "Disconnected";
+    }
+
+    async function addToken() {
       try {
-        const bal = await tokenContract.balanceOf(userAddress);
-        const decimals = await tokenContract.decimals();
-        const formatted = ethers.formatUnits(bal, decimals);
-
-        // USD value at $0.05 launch price
-        const usdVal = (parseFloat(formatted) * 0.05).toFixed(2);
-
-        document.getElementById("balanceBox").innerText = `${formatted} ZUCKA (~$${usdVal} at launch)`;
+        await window.ethereum.request({
+          method: "wallet_watchAsset",
+          params: {
+            type: "ERC20",
+            options: {
+              address: zuckabotCA,
+              symbol: "ZUCKA",
+              decimals: 18,
+              image: "https://www.zuckabot.xyz/logo.png"
+            },
+          },
+        });
       } catch (err) {
-        console.error("loadBalance error:", err);
+        document.getElementById("error").innerText = "Add token failed: " + err.message;
       }
     }
 
     async function initiateClaim() {
       try {
-        const tx = await distributorContract.initiateClaim();
+        const tx = await distributor.initiateClaim({ gasLimit: 200000 });
         await tx.wait();
-        alert("Claim initiated. Please wait the required time before finalizing.");
+        alert("Claim initiated! Wait 10 minutes before finalizing.");
       } catch (err) {
-        console.error("initiateClaim error:", err);
-        alert("Error initiating claim: " + (err?.reason || err.message));
+        document.getElementById("error").innerText = "Initiate failed: " + err.message;
       }
     }
 
     async function finalizeClaim() {
       try {
-        const requiredWei = await distributorContract.requiredClaimWei();
-        const tx = await distributorContract.finalizeClaim({ value: requiredWei });
+        const requiredWei = await distributor.requiredClaimWei();
+        const tx = await distributor.finalizeClaim({ value: requiredWei, gasLimit: 300000 });
         await tx.wait();
-        alert("Claim finalized successfully! ZUCKA tokens sent.");
-        loadBalance();
+        alert("Claim finalized! You received ZUCKA.");
       } catch (err) {
-        console.error("finalizeClaim error:", err);
-        alert("Error finalizing claim: " + (err?.reason || err.message));
+        document.getElementById("error").innerText = "Finalize failed: " + err.message;
       }
     }
 
-    function copyAddress(addr) {
-      navigator.clipboard.writeText(addr);
-      alert("Copied: " + addr);
-    }
-
-    function toggleFaq(el) {
-      const ans = el.nextElementSibling;
-      ans.style.display = ans.style.display === "block" ? "none" : "block";
-    }
+    document.getElementById("connectButton").onclick = connectWallet;
+    document.getElementById("disconnectButton").onclick = disconnectWallet;
+    document.getElementById("addTokenButton").onclick = addToken;
+    document.getElementById("initiateClaim").onclick = initiateClaim;
+    document.getElementById("finalizeClaim").onclick = finalizeClaim;
   </script>
 </body>
 </html>
