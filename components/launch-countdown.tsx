@@ -14,7 +14,7 @@ export function LaunchCountdown() {
   })
 
   useEffect(() => {
-    const targetDate = new Date("2025-10-01T00:00:00Z").getTime()
+    const targetDate = new Date("2025-10-15T00:00:00Z").getTime()
 
     const timer = setInterval(() => {
       const now = new Date().getTime()
@@ -68,12 +68,13 @@ export function LaunchCountdown() {
               <span className="text-sm font-medium text-secondary">Early Launch Possible</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Launch may happen earlier if the pre-launch giveaway pool is depleted before October 1st, 2025
+              Launch may happen earlier if the 200M pre-launch giveaway pool is exhausted before October 15th, 2025
             </p>
           </div>
 
           <p className="text-sm text-muted-foreground">
-            <strong>Target Date:</strong> October 1st, 2025
+            <strong>Target Date:</strong> October 15th, 2025 | <strong>Estimated Launch Price:</strong> $0.05 on
+            PancakeSwap
           </p>
         </div>
       </CardContent>

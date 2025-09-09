@@ -11,6 +11,7 @@ import { ContractStats } from "@/components/contract-stats"
 import { EnhancedClaimSection } from "@/components/enhanced-claim-section"
 import { AddTokenButton } from "@/components/add-token-button"
 import { LearnMoreSection } from "@/components/learn-more-section"
+import { LaunchCountdown } from "@/components/launch-countdown"
 import {
   connectWallet,
   getDistributorContractReadOnly,
@@ -158,7 +159,7 @@ function ZuckabotDAppContent() {
     {
       question: "What is the Zuckabot Pre-Launch Giveaway?",
       answer:
-        "We're conducting a massive 200,000,000 ZUCKA token pre-launch giveaway to build a strong community and create viral adoption. This strategic giveaway helps establish our ecosystem before the official PancakeSwap launch on October 1st, 2025.",
+        "We're conducting a massive 200,000,000 ZUCKA token pre-launch giveaway to build a strong community and create viral adoption. This strategic giveaway helps establish our ecosystem before the official PancakeSwap launch on October 15th, 2025.",
     },
     {
       question: "Why are you giving away 200M tokens?",
@@ -188,7 +189,7 @@ function ZuckabotDAppContent() {
     {
       question: "When will the token launch officially?",
       answer:
-        "The official PancakeSwap launch is scheduled for October 1st, 2025. However, the launch may happen earlier if the 200M token giveaway pool is depleted before that date.",
+        "The official PancakeSwap launch is scheduled for October 15th, 2025, with an estimated launch price of $0.05 per ZUCKA. However, the launch may happen earlier if the 200M token pre-launch giveaway pool is depleted before that date.",
     },
     {
       question: "Is the token contract verified?",
@@ -203,9 +204,9 @@ function ZuckabotDAppContent() {
       console.log("[v0] Starting contract data load...")
 
       setContractStats({
-        totalDistributed: "Loading...",
+        totalDistributed: "Fetching...",
         totalClaimants: 0,
-        bnbPrice: "Loading...",
+        bnbPrice: "Fetching...",
       })
 
       const contract = await getDistributorContractReadOnly()
@@ -275,9 +276,9 @@ function ZuckabotDAppContent() {
       })
 
       setContractStats({
-        totalDistributed: "Loading...",
+        totalDistributed: "Error",
         totalClaimants: 0,
-        bnbPrice: "Loading...",
+        bnbPrice: "Error",
       })
 
       setUserState((prev) => ({
@@ -685,7 +686,9 @@ function ZuckabotDAppContent() {
           <div className="glass-card p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border-2 border-primary/20 max-w-3xl mx-auto">
             <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-foreground leading-relaxed px-1">
               Building a strong community through strategic token distribution. Get your share before the official
-              PancakeSwap launch on <span className="text-primary font-bold gradient-text">October 1st, 2025</span>.
+              PancakeSwap launch on <span className="text-primary font-bold gradient-text">October 15th, 2025</span> at
+              an estimated price of <span className="text-secondary font-bold gradient-text">$0.05 per ZUCKA</span>.
+              Launch may happen earlier if the 200M pre-launch giveaway pool is exhausted.
             </p>
           </div>
         </section>
@@ -696,6 +699,9 @@ function ZuckabotDAppContent() {
           totalClaimants={contractStats.totalClaimants}
           bnbPrice={contractStats.bnbPrice}
         />
+
+        {/* Launch Countdown */}
+        <LaunchCountdown />
 
         {/* Enhanced Claim Section */}
         <EnhancedClaimSection

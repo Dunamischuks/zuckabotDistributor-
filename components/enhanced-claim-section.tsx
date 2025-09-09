@@ -51,7 +51,6 @@ export function EnhancedClaimSection({
         }
       }
 
-      // Restore countdown from localStorage if available
       const storedCountdown = localStorage.getItem(`zuckabot-countdown-${userAddress}`)
       const storedTimestamp = localStorage.getItem(`zuckabot-claim-timestamp-${userAddress}`)
 
@@ -63,12 +62,16 @@ export function EnhancedClaimSection({
 
         console.log("[v0] Restored countdown:", remainingTime, "seconds remaining")
         setLocalCountdown(remainingTime)
+      } else if (secondsUntilFinalize > 0) {
+        setLocalCountdown(secondsUntilFinalize)
       }
     }
-  }, [userAddress, onVerificationComplete, pendingClaimTimestamp])
+  }, [userAddress, onVerificationComplete, pendingClaimTimestamp, secondsUntilFinalize])
 
   useEffect(() => {
-    setLocalCountdown(secondsUntilFinalize)
+    if (secondsUntilFinalize > 0 && secondsUntilFinalize !== localCountdown) {
+      setLocalCountdown(secondsUntilFinalize)
+    }
 
     if (userAddress && secondsUntilFinalize > 0) {
       localStorage.setItem(`zuckabot-countdown-${userAddress}`, secondsUntilFinalize.toString())
@@ -77,7 +80,7 @@ export function EnhancedClaimSection({
   }, [secondsUntilFinalize, userAddress])
 
   useEffect(() => {
-    if (localCountdown > 0 && userAddress) {
+    if (localCountdown > 0 && userAddress && pendingClaimTimestamp > 0) {
       const timer = setInterval(() => {
         setLocalCountdown((prev) => {
           const newValue = Math.max(0, prev - 1)
@@ -97,7 +100,7 @@ export function EnhancedClaimSection({
 
       return () => clearInterval(timer)
     }
-  }, [localCountdown, userAddress])
+  }, [localCountdown, userAddress, pendingClaimTimestamp])
 
   const handleVerificationComplete = () => {
     setLocalVerified(true)
@@ -126,7 +129,9 @@ export function EnhancedClaimSection({
   }
 
   const handleFinalizeClaim = async () => {
-    const confirmed = confirm("Finalize your claim and receive 1,500 ZUCKA tokens?")
+    const confirmed = confirm(
+      "Finalize your claim and receive 1,500 ZUCKA tokens? This will transfer tokens instantly to your wallet.",
+    )
     if (!confirmed) return
 
     try {
@@ -136,6 +141,7 @@ export function EnhancedClaimSection({
       if (userAddress) {
         localStorage.removeItem(`zuckabot-countdown-${userAddress}`)
         localStorage.removeItem(`zuckabot-claim-timestamp-${userAddress}`)
+        setLocalCountdown(0)
       }
     } catch (error) {
       console.error("[v0] Failed to finalize claim:", error)
