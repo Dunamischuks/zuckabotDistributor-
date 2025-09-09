@@ -627,7 +627,7 @@ export const addTokenToWallet = async () => {
           address: ZUCKA_TOKEN_ADDRESS,
           symbol: "ZUCKA",
           decimals: 18,
-          image: "https://v0-zuckabot-d-app-development.vercel.app/images/zuckabot-logo.png",
+          image: "https://www.zuckabot.xyz/images/zuckabot-logo.png",
         },
       },
     })
