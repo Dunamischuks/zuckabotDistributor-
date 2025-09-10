@@ -291,11 +291,8 @@ export const getProvider = async () => {
 
   const rpcEndpoints = [
     "https://bsc-dataseed.binance.org/",
-    "https://bsc-dataseed1.defibit.io/",
-    "https://bsc-dataseed1.ninicoin.io/",
     "https://rpc.ankr.com/bsc",
-    "https://bsc-dataseed2.defibit.io/",
-    "https://bsc-dataseed3.defibit.io/",
+    "https://bsc-dataseed1.defibit.io/",
   ]
 
   // Test each RPC endpoint for actual connectivity
@@ -430,60 +427,21 @@ export const connectWallet = async (walletType: string) => {
 
     console.log(`[v0] Connecting to ${walletType}...`)
 
-    switch (walletType) {
-      case "metamask":
-        if (window.ethereum) {
-          // Check for MetaMask in multiple ways
-          if (window.ethereum.isMetaMask) {
-            console.log("[v0] MetaMask detected via isMetaMask flag")
-            provider = window.ethereum
-          } else if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
-            // Handle multiple wallet providers
-            console.log("[v0] Multiple providers detected, searching for MetaMask...")
-            const metamaskProvider = window.ethereum.providers.find((p: any) => p.isMetaMask)
-            if (metamaskProvider) {
-              console.log("[v0] MetaMask found in providers array")
-              provider = metamaskProvider
-            } else {
-              console.log("[v0] MetaMask not found in providers, using first available provider")
-              provider = window.ethereum.providers[0]
-            }
-          } else {
-            console.log("[v0] Using single ethereum provider")
-            provider = window.ethereum
-          }
-        } else {
-          throw new Error("MetaMask not detected. Please install MetaMask extension or use MetaMask mobile browser.")
-        }
-        break
-
-      case "trust":
-        if (window.ethereum) {
-          if (window.ethereum.isTrust) {
-            console.log("[v0] Trust Wallet detected")
-            provider = window.ethereum
-          } else {
-            console.log("[v0] Using generic provider for Trust Wallet")
-            provider = window.ethereum
-          }
-        } else {
-          throw new Error(
-            "Trust Wallet not detected. Please open this dApp in Trust Wallet's browser or install Trust Wallet.",
-          )
-        }
-        break
-
-      case "walletconnect":
-        if (window.ethereum) {
-          console.log("[v0] Using WalletConnect compatible provider")
-          provider = window.ethereum
-        } else {
-          throw new Error("No Web3 wallet detected. Please use a mobile wallet browser or install a Web3 wallet.")
-        }
-        break
-
-      default:
-        throw new Error(`Unsupported wallet type: ${walletType}`)
+    if (window.ethereum) {
+      if (walletType === "metamask" && window.ethereum.isMetaMask) {
+        provider = window.ethereum
+      } else if (walletType === "trust" && window.ethereum.isTrust) {
+        provider = window.ethereum
+      } else if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
+        const targetProvider = window.ethereum.providers.find(
+          (p: any) => (walletType === "metamask" && p.isMetaMask) || (walletType === "trust" && p.isTrust),
+        )
+        provider = targetProvider || window.ethereum.providers[0]
+      } else {
+        provider = window.ethereum
+      }
+    } else {
+      throw new Error(`${walletType} not detected. Please install ${walletType} or use ${walletType} mobile browser.`)
     }
 
     if (!provider) {
@@ -491,10 +449,17 @@ export const connectWallet = async (walletType: string) => {
     }
 
     console.log(`[v0] Requesting account access for ${walletType}...`)
-    const accounts = await provider.request({
+
+    const accountsPromise = provider.request({
       method: "eth_requestAccounts",
       params: [],
     })
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Connection timeout - please check your wallet")), 15000),
+    )
+
+    const accounts = await Promise.race([accountsPromise, timeoutPromise])
 
     if (!accounts || accounts.length === 0) {
       throw new Error("No accounts found. Please unlock your wallet and try again.")
@@ -503,47 +468,29 @@ export const connectWallet = async (walletType: string) => {
     const userAccount = accounts[0]
     console.log(`[v0] ${walletType} connected successfully:`, userAccount)
 
-    // Check and switch to BSC network
     try {
       const chainId = await provider.request({ method: "eth_chainId" })
-      console.log(`[v0] Current network chain ID:`, chainId)
-
       if (chainId !== SUPPORTED_NETWORKS.BSC.chainId) {
-        console.log("[v0] Switching to BSC network...")
-        try {
-          await provider.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: SUPPORTED_NETWORKS.BSC.chainId }],
-          })
-          console.log("[v0] Successfully switched to BSC")
-        } catch (switchError: any) {
-          if (switchError.code === 4902) {
-            console.log("[v0] Adding BSC network...")
-            await provider.request({
-              method: "wallet_addEthereumChain",
-              params: [SUPPORTED_NETWORKS.BSC],
-            })
-            console.log("[v0] BSC network added successfully")
-          } else {
-            console.warn("[v0] Network switch failed, continuing with current network:", switchError.message)
-          }
-        }
+        console.log("[v0] Attempting to switch to BSC network...")
+        await provider.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: SUPPORTED_NETWORKS.BSC.chainId }],
+        })
       }
     } catch (networkError) {
-      console.warn("[v0] Network operations failed, continuing with connection:", networkError)
+      console.warn("[v0] Network switch failed, continuing with current network:", networkError)
     }
 
     return userAccount
   } catch (error: any) {
     console.error(`[v0] ${walletType} connection error:`, error)
 
-    // Handle specific error codes
     if (error.code === 4001) {
-      throw new Error("Connection rejected by user. Please approve the connection request in your wallet.")
+      throw new Error("Connection rejected by user")
     } else if (error.code === -32002) {
-      throw new Error("Connection request pending. Please check your wallet for pending requests.")
+      throw new Error("Connection request pending - check your wallet")
     } else if (error.code === 4100) {
-      throw new Error("Wallet is locked. Please unlock your wallet and try again.")
+      throw new Error("Wallet is locked - please unlock and try again")
     }
 
     throw new Error(error.message || `Failed to connect ${walletType}`)
@@ -753,23 +700,28 @@ export const getUserClaimState = async (userAddress: string) => {
 
     console.log("[v0] Fetching user claim state for:", userAddress)
 
-    // Get user-specific claim data from contract
-    const [hasClaimed, pendingTimestamp, secondsUntilFinalize] = await Promise.all([
-      contract.hasClaimed(userAddress),
-      contract.pendingClaimTimestamp(userAddress),
-      contract.secondsUntilFinalize(userAddress),
-    ])
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Contract call timeout")), 10000),
+    )
 
-    console.log("[v0] User claim state from contract:")
-    console.log("[v0] - hasClaimed:", hasClaimed)
-    console.log("[v0] - pendingTimestamp:", pendingTimestamp.toString())
-    console.log("[v0] - secondsUntilFinalize:", secondsUntilFinalize.toString())
+    const statePromise = (async () => {
+      const [hasClaimed, pendingTimestamp, secondsUntilFinalize] = await Promise.all([
+        contract.hasClaimed(userAddress),
+        contract.pendingClaimTimestamp(userAddress),
+        contract.secondsUntilFinalize(userAddress),
+      ])
 
-    return {
-      hasClaimed,
-      pendingClaimTimestamp: Number(pendingTimestamp),
-      secondsUntilFinalize: Number(secondsUntilFinalize),
-    }
+      return {
+        hasClaimed,
+        pendingClaimTimestamp: Number(pendingTimestamp),
+        secondsUntilFinalize: Number(secondsUntilFinalize),
+      }
+    })()
+
+    const result = await Promise.race([statePromise, timeoutPromise])
+
+    console.log("[v0] User claim state from contract:", result)
+    return result
   } catch (error) {
     console.error("[v0] Failed to fetch user claim state:", error)
     throw error

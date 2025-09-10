@@ -204,88 +204,80 @@ function ZuckabotDAppContent() {
       console.log("[v0] Starting contract data load...")
 
       setContractStats({
-        totalDistributed: "Fetching...",
+        totalDistributed: "Loading...",
         totalClaimants: 0,
-        bnbPrice: "Fetching...",
+        bnbPrice: "Loading...",
       })
 
-      const contract = await getDistributorContractReadOnly()
-      if (!contract) {
-        console.error("[v0] Failed to get read-only contract")
-        throw new Error("Contract not available")
-      }
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Contract load timeout")), 15000),
+      )
 
-      console.log("[v0] Read-only contract connected successfully")
-      console.log("[v0] Contract address:", contract.target || contract.address)
+      const loadPromise = (async () => {
+        const contract = await getDistributorContractReadOnly()
+        if (!contract) {
+          throw new Error("Contract not available")
+        }
 
-      console.log("[v0] Fetching CLAIM_AMOUNT from contract...")
-      const claimAmount = await contract.CLAIM_AMOUNT()
-      console.log("[v0] CLAIM_AMOUNT fetched:", claimAmount.toString())
+        console.log("[v0] Contract connected, fetching data...")
 
-      console.log("[v0] Fetching CLAIM_FEE_USD18 from contract...")
-      const claimFeeUsd18 = await contract.CLAIM_FEE_USD18()
-      console.log("[v0] CLAIM_FEE_USD18 fetched:", claimFeeUsd18.toString())
+        const [claimAmount, claimFeeUsd18, totals, claimFeeWei, bnbPriceWei] = await Promise.all([
+          contract.CLAIM_AMOUNT(),
+          contract.CLAIM_FEE_USD18(),
+          contract.getTotals(),
+          contract.requiredClaimWei(),
+          contract.getLatestBNBPrice18(),
+        ])
 
-      console.log("[v0] Fetching getTotals from contract...")
-      const totals = await contract.getTotals()
-      console.log("[v0] getTotals fetched - tokens:", totals[0].toString(), "bnb:", totals[1].toString())
+        const tokensDistributed = totals[0].toString()
+        const totalClaimants = Math.floor(Number(tokensDistributed) / Number(claimAmount))
+        const bnbPrice = (Number(bnbPriceWei) / 1e18).toFixed(2)
 
-      console.log("[v0] Fetching requiredClaimWei from contract...")
-      const claimFeeWei = await contract.requiredClaimWei()
-      console.log("[v0] requiredClaimWei fetched:", claimFeeWei.toString())
+        return {
+          tokensDistributed,
+          totalClaimants,
+          bnbPrice,
+          claimAmount: claimAmount.toString(),
+          claimFeeWei: claimFeeWei.toString(),
+        }
+      })()
 
-      console.log("[v0] Fetching BNB price from contract...")
-      const bnbPriceWei = await contract.getLatestBNBPrice18()
-      console.log("[v0] BNB price fetched:", bnbPriceWei.toString())
-
-      const tokensDistributed = totals[0].toString() // totalClaimedTokens
-      const bnbCollected = totals[1].toString() // totalDonatedBNB
-      const totalClaimants = Math.floor(Number(tokensDistributed) / Number(claimAmount))
-      const bnbPrice = (Number(bnbPriceWei) / 1e18).toFixed(2)
-
-      console.log("[v0] Processed real contract values:")
-      console.log("[v0] - Claim amount:", claimAmount.toString())
-      console.log("[v0] - Claim fee USD18:", claimFeeUsd18.toString())
-      console.log("[v0] - Tokens distributed:", tokensDistributed)
-      console.log("[v0] - BNB collected:", bnbCollected)
-      console.log("[v0] - Total claimants:", totalClaimants)
-      console.log("[v0] - BNB price:", bnbPrice)
-      console.log("[v0] - Claim fee (Wei):", claimFeeWei.toString())
+      const contractData = await Promise.race([loadPromise, timeoutPromise])
 
       setContractStats({
-        totalDistributed: formatTokenAmount(tokensDistributed),
-        totalClaimants: totalClaimants,
-        bnbPrice: bnbPrice,
+        totalDistributed: formatTokenAmount(contractData.tokensDistributed),
+        totalClaimants: contractData.totalClaimants,
+        bnbPrice: contractData.bnbPrice,
       })
 
       setUserState((prev) => ({
         ...prev,
-        claimAmount: claimAmount.toString(),
-        claimFeeWei: claimFeeWei.toString(),
+        claimAmount: contractData.claimAmount,
+        claimFeeWei: contractData.claimFeeWei,
       }))
 
-      console.log("[v0] Contract data loaded successfully with REAL blockchain data")
+      console.log("[v0] Contract data loaded successfully")
     } catch (error: any) {
-      console.error("[v0] CRITICAL ERROR loading contract data:", error.message || error)
-      console.error("[v0] Full error object:", error)
+      console.error("[v0] Contract data load failed:", error)
+
+      const errorMsg = error.message.includes("timeout") ? "Network Slow" : "Connection Error"
+
+      setContractStats({
+        totalDistributed: errorMsg,
+        totalClaimants: 0,
+        bnbPrice: errorMsg,
+      })
 
       toast({
-        title: "Contract Connection Failed",
-        description: `Unable to fetch data from smart contract: ${error.message}`,
+        title: "Network Issue",
+        description: "Having trouble connecting to blockchain. Retrying...",
         variant: "destructive",
       })
 
-      setContractStats({
-        totalDistributed: "Error",
-        totalClaimants: 0,
-        bnbPrice: "Error",
-      })
-
-      setUserState((prev) => ({
-        ...prev,
-        claimAmount: "0",
-        claimFeeWei: "0",
-      }))
+      setTimeout(() => {
+        console.log("[v0] Auto-retrying contract data load...")
+        loadContractData()
+      }, 3000)
     }
   }
 
@@ -472,15 +464,9 @@ function ZuckabotDAppContent() {
           "1,500 ZUCKA tokens have been successfully transferred to your wallet! Stay connected to our social platforms for LP launch updates.",
       })
 
-      // Reload contract data to update stats
-      loadContractData()
-
-      // Background sync (non-blocking)
-      try {
-        await syncUserStateWithContract(userAddress)
-      } catch (syncError) {
-        console.error("[v0] Background sync failed (non-critical):", syncError)
-      }
+      setTimeout(() => {
+        loadContractData()
+      }, 1000)
     } catch (error: any) {
       console.error("[v0] Failed to finalize claim:", error)
       toast({
@@ -507,6 +493,12 @@ function ZuckabotDAppContent() {
 
     try {
       console.log(`[v0] Attempting to connect ${walletType} wallet...`)
+
+      toast({
+        title: "Connecting...",
+        description: `Connecting to ${walletType}. Please check your wallet.`,
+      })
+
       const address = await connectWallet(walletType)
 
       if (address) {
